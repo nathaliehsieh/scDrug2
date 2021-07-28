@@ -7,17 +7,21 @@ def runGSEAPY(adata, group_by='louvain', gene_sets=['GO_Biological_Process_2021'
     import gseapy as gp
 
     df_list = []
+    cluster_list = []
     for celltype in set(adata.obs[group_by]):
-        indlist_logfc = subdata.uns['rank_genes_groups']['logfoldchanges'][celltype] >= logfc_threshold
-        indlist_adjp = subdata.uns['rank_genes_groups']['pvals_adj'][celltype] <= 1e-2
-        indlist_p = subdata.uns['rank_genes_groups']['pvals'][celltype] <= 1e-2
-        #indlist_pts = subdata.uns['rank_genes_groups']['pts'][celltype] >= 0.1
+        indlist_logfc = adata.uns['rank_genes_groups']['logfoldchanges'][celltype] >= logfc_threshold
+        indlist_adjp = adata.uns['rank_genes_groups']['pvals_adj'][celltype] <= 1e-2
+        indlist_p = adata.uns['rank_genes_groups']['pvals'][celltype] <= 1e-2
+        #indlist_pts = adata.uns['rank_genes_groups']['pts'][celltype] >= 0.1
         
         indlist = indlist_logfc * indlist_adjp * indlist_p 
 
         ind = [x for x in range(0, len(indlist)) if indlist[x] ]
-        degs = subdata.uns['rank_genes_groups']['names'][celltype][ind].tolist()
+        degs = adata.uns['rank_genes_groups']['names'][celltype][ind].tolist()
         
+        if(len(degs) < 1):
+            continue
+
         enr = gp.enrichr(gene_list=degs,
                 gene_sets=gene_sets,
                 organism=organism, 
@@ -25,11 +29,12 @@ def runGSEAPY(adata, group_by='louvain', gene_sets=['GO_Biological_Process_2021'
                 no_plot=True
                 )
         df_list.append(enr.res2d)
+        cluster_list.append(celltype)
     
     columns = ['Cluster', 'Gene_set', 'Term', 'Overlap', 'P-value', 'Adjusted P-value', 'Genes']
 
     df = pd.DataFrame(columns = columns)
-    for cluster_ind, df_ in enumerate(df_list):
+    for cluster_ind, df_ in zip(cluster_list, df_list):
         df_ = df_[df_['Adjusted P-value'] <= cutoff]
         df_ = df_.assign(Cluster = cluster_ind)
         if(df_.shape[0] > 0):
