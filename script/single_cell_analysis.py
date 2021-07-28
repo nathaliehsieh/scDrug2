@@ -68,12 +68,12 @@ if args.format == 'csv':
     if args.input[-4:] != '.csv':
         sys.exit("The input file is not a CSV file.")
 elif args.format == '10x':
-    if not os.path.exists(os.path.join(args.input, 'matrix.mtx')):
+    if not os.path.exists(os.path.join(args.input, 'matrix.mtx')) and not os.path.exists(os.path.join(args.input, 'matrix.mtx.gz')):
         sys.exit("Cannot find 'matrix.mtx' file in the input directory.")
-    if not os.path.exists(os.path.join(args.input, 'genes.tsv')):
-        if not os.path.exists(os.path.join(args.input, 'features.tsv')):
+    if not os.path.exists(os.path.join(args.input, 'genes.tsv')) and not os.path.exists(os.path.join(args.input, 'genes.tsv.gz')):
+        if not os.path.exists(os.path.join(args.input, 'features.tsv')) and not os.path.exists(os.path.join(args.input, 'features.tsv.gz')):
             sys.exit("Cannot find 'genes.tsv' or 'features.tsv' file in the input directory.")
-    if not os.path.exists(os.path.join(args.input, 'barcodes.tsv')):
+    if not os.path.exists(os.path.join(args.input, 'barcodes.tsv')) and not os.path.exists(os.path.join(args.input, 'barcodes.tsv.gz')):
         sys.exit("Cannot find 'barcodes.tsv' file in the input directory.")
 elif args.format == 'h5ad':
     if args.input[-5:] != '.h5ad':
