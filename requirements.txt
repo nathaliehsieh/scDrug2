@@ -1,0 +1,6 @@
+tensorflow
+pandas
+scanpy
+python-igraph
+louvain
+openpyxl
