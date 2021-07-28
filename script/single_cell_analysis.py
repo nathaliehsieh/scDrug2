@@ -3,6 +3,43 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
+def runGSEAPY(adata, group_by='louvain', gene_sets=['GO_Biological_Process_2021'], organism='Human', cutoff=0.05, logfc_threshold=2):
+    import gseapy as gp
+
+    df_list = []
+    for celltype in set(adata.obs[group_by]):
+        indlist_logfc = subdata.uns['rank_genes_groups']['logfoldchanges'][celltype] >= logfc_threshold
+        indlist_adjp = subdata.uns['rank_genes_groups']['pvals_adj'][celltype] <= 1e-2
+        indlist_p = subdata.uns['rank_genes_groups']['pvals'][celltype] <= 1e-2
+        #indlist_pts = subdata.uns['rank_genes_groups']['pts'][celltype] >= 0.1
+        
+        indlist = indlist_logfc * indlist_adjp * indlist_p 
+
+        ind = [x for x in range(0, len(indlist)) if indlist[x] ]
+        degs = subdata.uns['rank_genes_groups']['names'][celltype][ind].tolist()
+        
+        enr = gp.enrichr(gene_list=degs,
+                gene_sets=gene_sets,
+                organism=organism, 
+                description=celltype,
+                no_plot=True
+                )
+        df_list.append(enr.res2d)
+    
+    columns = ['Cluster', 'Gene_set', 'Term', 'Overlap', 'P-value', 'Adjusted P-value', 'Genes']
+
+    df = pd.DataFrame(columns = columns)
+    for cluster_ind, df_ in enumerate(df_list):
+        df_ = df_[df_['Adjusted P-value'] <= cutoff]
+        df_ = df_.assign(Cluster = cluster_ind)
+        if(df_.shape[0] > 0):
+            df = pd.concat([df, df_[columns]], sort=False)
+        else:
+            print('No pathway with an adjusted P-value less than the cutoff (={}) for cluster {}'.format(cutoff, cluster_ind))
+    
+    return df
+
+
 ## Parse command-line arguments
 # process arguments
 parser = argparse.ArgumentParser(description="scRNA-seq data analysis")
@@ -15,6 +52,7 @@ parser.add_argument("-r", "--resolution", type=float, default=0.6, help="resolut
 parser.add_argument("-m", "--metadata", default=None, help="path to metadata CSV file for batch correction (index as input in first column)")
 parser.add_argument("-b", "--batch", default=None, help="column in metadata for batch correction, e.g. 'patient_id'")
 parser.add_argument("-c", "--clusters", default=None, help="perform single cell analysis only on specified clusters, e.g. '1,3,8,9'")
+parser.add_argument("-g", "--gsea", default=False, help="whether to perform the gene set enrichment analsis (GSEA), default=False")
 
 args = parser.parse_args()
 
@@ -141,7 +179,7 @@ if not args.batch is None:
 ## Finding differentially expressed genes
 adata.rename_categories('louvain', groups)
 method = "t-test"
-sc.tl.rank_genes_groups(adata, 'louvain', use_raw=False, method=method)
+sc.tl.rank_genes_groups(adata, 'louvain', use_raw=False, method=method, pts=True)
 
 adata.write(results_file)
 
@@ -149,6 +187,13 @@ adata.write(results_file)
 result = adata.uns['rank_genes_groups']
 dat = pd.DataFrame({group + '_' + key: result[key][group] for group in groups for key in ['names', 'logfoldchanges','scores','pvals']})
 dat.to_csv(os.path.join(args.output, 'cluster_DEGs.csv'))
+
+# perform GSEA
+if args.gsea:
+    df_gsea = runGSEAPY(adata)
+    df_gsea.to_csv(os.path.join(args.output, 'GSEA_results.csv'))
+
+
 
 # GEP format
 adata_GEP = adata.raw.to_adata()
