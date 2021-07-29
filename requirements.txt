@@ -4,3 +4,6 @@ scanpy
 python-igraph
 louvain
 openpyxl
+gseapy
+
+ipywidgets
