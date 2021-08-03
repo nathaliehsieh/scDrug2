@@ -15,7 +15,8 @@ args = parser.parse_args()
 
 
 ## Run CIBERSORTx fractions
-os.system("docker run -v {input_dir}:/src/data -v {output_dir}:/src/outdir \
+os.system("docker run --rm --name cibersortx/fractions \
+          -v {input_dir}:/src/data -v {output_dir}:/src/outdir \
           cibersortx/fractions --username {username} --token {token} \
           --single_cell TRUE --refsample {refsample} --mixture {mixture}".format(
           input_dir=os.path.abspath(args.input), output_dir=os.path.abspath(args.output), 
