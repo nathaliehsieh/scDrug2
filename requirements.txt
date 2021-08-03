@@ -5,5 +5,5 @@ python-igraph
 louvain
 openpyxl
 gseapy
-
 ipywidgets
+cmapPy
