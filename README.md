@@ -46,7 +46,17 @@ The single-cell analysis pipeline goes through fundamental data analysis, IC50 p
 
 - **Treatment Selection** lists treatment combinations of given cell clusters.
 
+
 ### Single-Cell Data Analysis
+
+**Single-Cell Data Analysis** takes the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, and outputs a Scanpy Anndata object `scanpyobj.h5ad`, the UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
+
+Optionally, **Single-Cell Data Analysis** carries out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provides additional UMAPs showing batch effects and cell type (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`.
+
+Furthermore, **Single-Cell Data Analysis** can take previously produced Anndata as input and apply sub-clustering on specified clusters.
+
+
+- Run `python single_cell_analysis.py -h` to show the help messages as follow for **Single-Cell Data Analysis**.
 
 ```
 usage: single_cell_analysis.py [-h] -i INPUT [-f FORMAT] [-o OUTPUT] [-r RESOLUTION] [-m METADATA] [-b BATCH]
@@ -59,8 +69,7 @@ optional arguments:
   -i INPUT, --input INPUT
                         path to input 10x directory or CSV file
   -f FORMAT, --format FORMAT
-                        input format, 10x (default) | csv | h5ad (Anndata object for subclustering with --clusters
-                        CLUSTERS)
+                        input format, 10x (default) | csv | h5ad (Anndata object for subclustering with --clusters CLUSTERS)
   -o OUTPUT, --output OUTPUT
                         path to output directory, default='./'
   -r RESOLUTION, --resolution RESOLUTION
@@ -72,10 +81,25 @@ optional arguments:
   -c CLUSTERS, --clusters CLUSTERS
                         perform single cell analysis only on specified clusters, e.g. '1,3,8,9'
   -a, --annotation      perform cell type annotation
-  -g, --gsea            perform gene set enrichment analsis (GSEA)
+  -g, --gsea            perform gene set enrichment analysis (GSEA)
 ```
 
+- Apply **Single-Cell Data Analysis** with batch correction, cell type annotation and GSEA.
+
+```
+python single_cell_analysis.py --input INPUT --metadata METADATA --batch BATCH --annotation --gsea
+```
+
+- **Single-Cell Data Analysis** for sub-clustering with batch correction.
+
+```
+python single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH
+```
+
+
 ### IC50 Prediction
+
+
 
 ```
 usage: IC50_prediction.py [-h] -i INPUT [-o OUTPUT] [-c CLUSTERS]
@@ -132,8 +156,7 @@ optional arguments:
                         Sensitivity threshold. Range: [-1,0), default:-0.9
   -c CON_THRESHOLD, --con_threshold CON_THRESHOLD
                         Consistency threshold. Range: [-1,0), default:-0.75
-  --celltype CELLTYPE   Same as the cell type for decomposition. Options: A375|A549|ASC|BT20|CD34|HA1E|HCC515|HELA|HEP
-                        G2|HME1|HS578T|HT29|HUES3|HUVEC|JURKAT|LNCAP|MCF10A|MCF7|MDAMB231|MNEU|NEU|NPC|PC3|SKBR3|SKL|Y
-                        APC
+  --celltype CELLTYPE   Same as the cell type for decomposition. Options: A375|A549|ASC|BT20|CD34|HA1E|HCC515|HELA|HEPG2|
+                        HME1|HS578T|HT29|HUES3|HUVEC|JURKAT|LNCAP|MCF10A|MCF7|MDAMB231|MNEU|NEU|NPC|PC3|SKBR3|SKL|YAPC
   --metadata METADATA   the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'
 ```
