@@ -38,6 +38,14 @@
 
 ## Usage
 
+The single-cell analysis pipeline goes through fundamental data analysis, IC50 prediction and treatment selection on scRNA-seq data.
+
+- **Single-Cell Data Analysis** performs clustering, cell type annotation and Gene Set Enrichment Analysis (GSEA) on the transcriptomic data. 
+
+- **IC50 Prediction** estimates the half maximal inhibitory concentration (IC50) of given cell clusters.
+
+- **Treatment Selection** lists treatment combinations of given cell clusters.
+
 ### Single-Cell Data Analysis
 
 ```
