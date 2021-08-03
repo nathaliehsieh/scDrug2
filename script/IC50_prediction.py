@@ -1,4 +1,3 @@
-## Prediction based on CaDRReS-Sc pre-trained model
 import argparse, sys, os, pickle
 from collections import Counter
 import importlib

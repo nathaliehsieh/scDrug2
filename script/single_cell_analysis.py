@@ -55,7 +55,7 @@ parser.add_argument("-o", "--output", default='./', help="path to output directo
 parser.add_argument("-r", "--resolution", type=float, default=0.6, help="resolution for clustering, default=0.6")
 # parser.add_argument("--auto-resolution", action="store_true", help="set True to automatically determine resolution for clustering, default=False")
 parser.add_argument("-m", "--metadata", default=None, help="path to metadata CSV file for batch correction (index as input in first column)")
-parser.add_argument("-b", "--batch", default=None, help="column in metadata for batch correction, e.g. 'patient_id'")
+parser.add_argument("-b", "--batch", default=None, help="column in metadata (or adata.obs) for batch correction, e.g. 'PatientID'")
 parser.add_argument("-c", "--clusters", default=None, help="perform single cell analysis only on specified clusters, e.g. '1,3,8,9'")
 parser.add_argument("-a", "--annotation", action="store_true", help="perform cell type annotation")
 parser.add_argument("-g", "--gsea", action="store_true", help="perform gene set enrichment analsis (GSEA)")
@@ -95,11 +95,14 @@ if not args.metadata is None:
     if args.metadata[-4:] != '.csv':
         sys.exit("The metadata file is not a CSV file.")
 
-# check batch
+# check batch in metadata
 if not args.batch is None:
-    metadata_df = pd.read_csv(args.metadata, index_col=0)
-    if not args.batch in metadata_df.columns:
-        sys.exit("The batch column is not in the metadata file.")
+    if args.metadata is None and  args.format != 'h5ad':
+        sys.exit("Please provide the metadata file for batch correction with --metadata METADATA.")
+    if not args.metadata is None:
+        metadata_df = pd.read_csv(args.metadata, index_col=0)
+        if not args.batch in metadata_df.columns:
+            sys.exit("The batch column is not in the metadata file.")
 
 
 ## Preprocessing
@@ -149,7 +152,11 @@ sc.tl.pca(adata, svd_solver='arpack')
 
 ## Batch Correction with Harmony
 if not args.batch is None:
-    adata.obs[args.batch] = metadata_df.loc[adata.obs.index][args.batch]
+    if not args.metadata is None:
+        adata.obs[args.batch] = metadata_df.loc[adata.obs.index][args.batch]
+    elif args.format == 'h5ad' and not args.batch in adata.obs.columns:
+        sys.exit("The batch column is not in the Anndata object.")
+    
     sc.external.pp.harmony_integrate(adata, args.batch, adjusted_basis='X_pca')
 
 
@@ -161,7 +168,7 @@ sc.tl.louvain(adata, resolution=args.resolution)
 # adata.write(results_file)
 
 
-groups = np.sort(adata.obs['louvain'].unique())
+groups = sorted(adata.obs['louvain'].unique(), key=int)
 if args.annotation:
     ## scMatch
     # Export csv used by scMatch
@@ -190,7 +197,9 @@ if args.annotation:
 
 # GEP format
 GEP_df.columns = adata.obs['louvain'].tolist()
-GEP_df.to_csv(os.path.join(args.output, 'GEP.csv'))
+# GEP_df = GEP_df.loc[adata.var.index[adata.var.highly_variable==True]]
+GEP_df.dropna(axis=1, inplace=True)
+GEP_df.to_csv(os.path.join(args.output, 'GEP.txt'), sep='\t')
 
 
 ## Finding differentially expressed genes
