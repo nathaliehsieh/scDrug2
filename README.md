@@ -4,13 +4,37 @@
 
 ## Download and Installation
 
-```
-git clone https://github.com/b06902075/single-cell-analysis.git ./single-cell-analysis
-docker build -t single-cell-analysis ./single-cell-analysis
-docker run -it --name single-cell-analysis -v /path/to/mount/in/server:/path/to/mount/in/docker --privileged IMAGE_ID 
-/etc/init.d/docker start
-docker pull cibersortx/fractions
-```
+1.  Clone the repository to local directory, ex: `./single-cell-analysis`.
+
+    ```
+    git clone https://github.com/b06902075/single-cell-analysis.git ./single-cell-analysis
+    ```
+
+
+2.  Build the docker image tagged `single-cell-analysis`.
+
+    ```
+    docker build -t single-cell-analysis ./single-cell-analysis
+    ```
+
+
+3.  Run the docker container named `single-cell-analysis` with `/docker/path` mounted to `/server/path` to access files within the docker container.
+    
+    ```
+    docker run -it --name single-cell-analysis -v /server/path:/docker/path --privileged IMAGE_ID
+    ```
+    
+    Note: Get `IMAGE_ID` with command `docker images`.
+    
+4.  In the docker container `single-cell-analysis`, pull the docker image `cibersortx/fractions` used in treatment selection.
+
+    ```
+    /etc/init.d/docker start
+    docker pull cibersortx/fractions
+    ```
+    
+    Note: Get `CONTAINER_ID` with command `docker ps -a` and start the container with `docker start -i CONTAINER_ID`.
+
 
 ## Usage
 
