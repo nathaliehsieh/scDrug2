@@ -58,7 +58,7 @@ parser.add_argument("-m", "--metadata", default=None, help="path to metadata CSV
 parser.add_argument("-b", "--batch", default=None, help="column in metadata (or adata.obs) for batch correction, e.g. 'PatientID'")
 parser.add_argument("-c", "--clusters", default=None, help="perform single cell analysis only on specified clusters, e.g. '1,3,8,9'")
 parser.add_argument("-a", "--annotation", action="store_true", help="perform cell type annotation")
-parser.add_argument("-g", "--gsea", action="store_true", help="perform gene set enrichment analsis (GSEA)")
+parser.add_argument("-g", "--gsea", action="store_true", help="perform gene set enrichment analysis (GSEA)")
 
 args = parser.parse_args()
 
