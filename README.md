@@ -49,9 +49,9 @@ The single-cell analysis pipeline goes through fundamental data analysis, IC50 p
 
 ### Single-Cell Data Analysis
 
-**Single-Cell Data Analysis** takes the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, and outputs a Scanpy Anndata object `scanpyobj.h5ad`, the UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
+**Single-Cell Data Analysis** takes the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, performs fundamental data analysis, and outputs a Scanpy Anndata object `scanpyobj.h5ad`, the UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
 
-Optionally, **Single-Cell Data Analysis** carries out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provides additional UMAPs showing batch effects and cell type (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`.
+Optionally, **Single-Cell Data Analysis** carries out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provides additional UMAPs showing batch effects and cell type (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`. For cell type annotation, we use [scMatch: a single-cell gene expression profile annotation tool using reference datasets](https://github.com/asrhou/scMatch).
 
 Furthermore, **Single-Cell Data Analysis** can take previously produced Anndata as input and apply sub-clustering on specified clusters.
 
@@ -99,7 +99,9 @@ python single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH
 
 ### IC50 Prediction
 
+**IC50 Prediction** takes the Scanpy Anndata generated in **Single-Cell Data Analysis** as input, estimates IC50 drug response on specified clusters with [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and outputs `IC50_prediction.csv` as the prediction result.
 
+- Run `python IC50_prediction.py -h` to show the help messages as follow for **IC50 Prediction**.
 
 ```
 usage: IC50_prediction.py [-h] -i INPUT [-o OUTPUT] [-c CLUSTERS]
@@ -114,6 +116,12 @@ optional arguments:
                         path to output directory, default='./'
   -c CLUSTERS, --clusters CLUSTERS
                         perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'
+```
+
+- Predict IC50 drug response on specified clusters with **IC50 Prediction**.
+
+```
+python IC50_prediction.py --input scanpyobj.h5ad --clusters CLUSTERS
 ```
 
 ### Treatment Selection
@@ -137,7 +145,6 @@ optional arguments:
                         reference sample file from single cell RNA sequencing data
   -m MIXTURE, --mixture MIXTURE
                         mixture matrix required for running CIBERSORTx
-
 ```
 
 ```
