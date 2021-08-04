@@ -11,14 +11,14 @@
     ```
 
 
-2.  Build the docker image tagged `single-cell-analysis`.
+2.  Build the Docker image tagged `single-cell-analysis`.
 
     ```
     docker build -t single-cell-analysis ./single-cell-analysis
     ```
 
 
-3.  Run the docker container named `single-cell-analysis` with `/docker/path` mounted to `/server/path` to access files within the docker container.
+3.  Run the Docker container named `single-cell-analysis` with `/docker/path` mounted to `/server/path` to access files within the Docker container.
     
     ```
     docker run -it --name single-cell-analysis -v /server/path:/docker/path --privileged IMAGE_ID
@@ -26,7 +26,7 @@
     
     Note: Get `IMAGE_ID` with command `docker images`.
     
-4.  In the docker container `single-cell-analysis`, pull the docker image `cibersortx/fractions` used in treatment selection.
+4.  In the Docker container `single-cell-analysis`, pull the Docker image `cibersortx/fractions` used in treatment selection.
 
     ```
     /etc/init.d/docker start
@@ -126,6 +126,14 @@ python IC50_prediction.py --input scanpyobj.h5ad --clusters CLUSTERS
 
 ### Treatment Selection
 
+In **Treatment Selection**, we first **impute cell fractions** of `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerates the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **select treatment combinations** from the LINCS L1000 database with the CIBERSORTx result.
+
+#### Impute Cell Fractions
+
+**Impute Cell Fractions** takes a reference sample file from scRNA-seq data and a mixture matrix, both within the input directory, to run CIBERSORTx Cell Fractions, and outputs CIBERSORTx result files to the output directory, including `CIBERSORTx_Results.txt`.
+
+- Run `python CIBERSORTx_fractions.py -h` to show the help messages as follow for **Impute Cell Fractions**.
+
 ```
 usage: CIBERSORTx_fractions.py [-h] -i INPUT [-o OUTPUT] -u USERNAME -t TOKEN -r REFSAMPLE -m MIXTURE
 
@@ -146,6 +154,16 @@ optional arguments:
   -m MIXTURE, --mixture MIXTURE
                         mixture matrix required for running CIBERSORTx
 ```
+
+- **Impute Cell Fractions** with CIBERSORTx Cell Fractions.
+
+```
+python CIBERSORTx_fractions.py --input INPUT --username USERNAME --token TOKEN --refsample GEP.txt --mixture MIXTURE
+```
+
+Note: To obtain `USERNAME` and `TOKEN`, register and request for access to CIBERSORTx Docker on [CIBERSORTx](https://cibersortx.stanford.edu) website.
+
+
 
 ```
 usage: treatment_selection.py [-h] -i INPUT [-o OUTDIR] [-t THRESHOLD] [-c CON_THRESHOLD] --celltype CELLTYPE
