@@ -163,7 +163,11 @@ python CIBERSORTx_fractions.py --input INPUT --username USERNAME --token TOKEN -
 
 Note: To obtain `USERNAME` and `TOKEN`, register and request for access to CIBERSORTx Docker on [CIBERSORTx](https://cibersortx.stanford.edu) website.
 
+#### Select Treatment Combinations
 
+**Select Treatment Combinations** takes the CIBERSORTx result `CIBERSORTx_Results.txt` and the L1000 instance info file as input, selects treatment combinations for given cell type from the LINCS L1000 database, and outputs the treatment combinations list `CIBERSORTx_Results_solution_list_*.csv`.
+
+- Run `python treatment_selection.py -h` to show the help messages as follow for **Select Treatment Combinations**.
 
 ```
 usage: treatment_selection.py [-h] -i INPUT [-o OUTDIR] [-t THRESHOLD] [-c CON_THRESHOLD] --celltype CELLTYPE
@@ -184,4 +188,10 @@ optional arguments:
   --celltype CELLTYPE   Same as the cell type for decomposition. Options: A375|A549|ASC|BT20|CD34|HA1E|HCC515|HELA|HEPG2|
                         HME1|HS578T|HT29|HUES3|HUVEC|JURKAT|LNCAP|MCF10A|MCF7|MDAMB231|MNEU|NEU|NPC|PC3|SKBR3|SKL|YAPC
   --metadata METADATA   the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'
+```
+
+- **Select Treatment Combinations** with the L1000 metadata.
+
+```
+python treatment_selection.py --input CIBERSORTx_Results.txt --celltype CELLTYPE --metadata METADATA
 ```
