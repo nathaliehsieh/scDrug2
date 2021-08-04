@@ -1,6 +1,15 @@
 # Single-Cell Analysis Pipeline
 
-(Introduction)
+The Single-Cell Analysis Pipeline constructs a workflow for comprehensive analyzation on single-cell RNA sequencing (scRNA-seq) data. It provides a powerful tool with various functions, from fundamental analysis to drug response prediction, and treatment suggestions.
+
+The Single-Cell Analysis Pipeline goes through three parts on raw scRNA-seq data investigation: **Single-Cell Data Analysis**, **IC50 Prediction**, and **Treatment Selection**.
+
+- **Single-Cell Data Analysis** performs data prepcocessing, clustering, cell type annotation and Gene Set Enrichment Analysis (GSEA). 
+
+- **IC50 Prediction** estimates the half maximal inhibitory concentration (IC50) of given cell clusters.
+
+- **Treatment Selection** lists treatment combinations of given cell clusters.
+
 
 ## Download and Installation
 
@@ -37,15 +46,6 @@
 
 
 ## Usage
-
-The single-cell analysis pipeline goes through fundamental data analysis, IC50 prediction and treatment selection on scRNA-seq data.
-
-- **Single-Cell Data Analysis** performs clustering, cell type annotation and Gene Set Enrichment Analysis (GSEA) on the transcriptomic data. 
-
-- **IC50 Prediction** estimates the half maximal inhibitory concentration (IC50) of given cell clusters.
-
-- **Treatment Selection** lists treatment combinations of given cell clusters.
-
 
 ### Single-Cell Data Analysis
 
