@@ -57,8 +57,9 @@ parser.add_argument("-r", "--resolution", type=float, default=0.6, help="resolut
 parser.add_argument("-m", "--metadata", default=None, help="path to metadata CSV file for batch correction (index as input in first column)")
 parser.add_argument("-b", "--batch", default=None, help="column in metadata (or adata.obs) for batch correction, e.g. 'PatientID'")
 parser.add_argument("-c", "--clusters", default=None, help="perform single cell analysis only on specified clusters, e.g. '1,3,8,9'")
-parser.add_argument("-a", "--annotation", action="store_true", help="perform cell type annotation")
-parser.add_argument("-g", "--gsea", action="store_true", help="perform gene set enrichment analysis (GSEA)")
+parser.add_argument("--GEP", default=True, type=lambda x: (str(x).lower() == 'true'), help="whether to generate Gene Expression Profile file, default=True")
+parser.add_argument("--annotation", action="store_true", help="perform cell type annotation")
+parser.add_argument("--gsea", action="store_true", help="perform gene set enrichment analysis (GSEA)")
 
 args = parser.parse_args()
 
@@ -106,6 +107,7 @@ if not args.batch is None:
 
 
 ## Preprocessing
+print('Preprocessing...')
 results_file = os.path.join(args.output, 'scanpyobj.h5ad')
 
 if args.format == 'h5ad':
@@ -128,10 +130,11 @@ else:
     adata = adata[adata.obs.pct_counts_mt < 30, :]
 
 # GEP preperation
-adata_GEP = adata.copy()
-sc.pp.normalize_total(adata_GEP, target_sum=1e6)
-mat = adata_GEP.X.transpose()
-GEP_df = pd.DataFrame(mat.toarray(), index=adata_GEP.var.index)
+if args.GEP:
+    adata_GEP = adata.copy()
+    sc.pp.normalize_total(adata_GEP, target_sum=1e6)
+    mat = adata_GEP.X.transpose()
+    GEP_df = pd.DataFrame(mat.toarray(), index=adata_GEP.var.index)
 
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
@@ -156,11 +159,12 @@ if not args.batch is None:
         adata.obs[args.batch] = metadata_df.loc[adata.obs.index][args.batch]
     elif args.format == 'h5ad' and not args.batch in adata.obs.columns:
         sys.exit("The batch column is not in the Anndata object.")
-    
+    print('Batch correction...')
     sc.external.pp.harmony_integrate(adata, args.batch, adjusted_basis='X_pca')
 
 
 ## Clustering
+print('Clustering...')
 sc.pp.neighbors(adata, n_pcs=20)
 sc.tl.umap(adata)
 sc.tl.louvain(adata, resolution=args.resolution)
@@ -170,7 +174,8 @@ sc.tl.louvain(adata, resolution=args.resolution)
 
 groups = sorted(adata.obs['louvain'].unique(), key=int)
 if args.annotation:
-    ## scMatch
+    print('Cell type annotation...')
+    
     # Export csv used by scMatch
     mat = np.zeros((len(adata.raw.var.index), len(groups)), dtype=float)
     for group in groups:
@@ -187,6 +192,7 @@ if args.annotation:
                               ['cell type'].tolist()[0] for group in groups]
     adata.obs['cell_type'] = adata.obs['louvain'].cat.rename_categories(scMatch_cluster_names)
 
+print('Exporting UMAP...')
 sc.settings.autosave = True
 sc.settings.figdir = args.output
 sc.pl.umap(adata, color=['louvain'], use_raw=False, show=False, save='_cluster.png')
@@ -196,13 +202,16 @@ if args.annotation:
     sc.pl.umap(adata, color=['cell_type'], use_raw=False, show=False, save='_cell_type.png')
 
 # GEP format
-GEP_df.columns = adata.obs['louvain'].tolist()
-# GEP_df = GEP_df.loc[adata.var.index[adata.var.highly_variable==True]]
-GEP_df.dropna(axis=1, inplace=True)
-GEP_df.to_csv(os.path.join(args.output, 'GEP.txt'), sep='\t')
+if args.GEP:
+    print('Exporting GEP...')
+    GEP_df.columns = adata.obs['louvain'].tolist()
+    # GEP_df = GEP_df.loc[adata.var.index[adata.var.highly_variable==True]]
+    GEP_df.dropna(axis=1, inplace=True)
+    GEP_df.to_csv(os.path.join(args.output, 'GEP.txt'), sep='\t')
 
 
 ## Finding differentially expressed genes
+print('Finding Differentially Expressed Genes...')
 method = "t-test"
 sc.tl.rank_genes_groups(adata, 'louvain', method=method, pts=True)
 
@@ -215,6 +224,7 @@ dat.to_csv(os.path.join(args.output, 'cluster_DEGs.csv'))
 
 # perform GSEA
 if args.gsea:
+    print('Gene Set Enrichment Analysis...')
     df_gsea = runGSEAPY(adata)
     df_gsea.to_csv(os.path.join(args.output, 'GSEA_results.csv'))
 
