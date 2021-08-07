@@ -1,5 +1,3 @@
-# [1]: metadata [2]:gctx [3]:sig
-
 from cmapPy.pandasGEXpress.parse import parse
 import argparse
 import pandas as pd
@@ -10,7 +8,8 @@ import sys
 
 def downloadFromGEO(filename, url):
     print('downloading {} from the GEO website...'.format(filename))
-    with urllib.request.urlopen(url) as response, open(filename, 'wb') as out_file:
+    from urllib import request
+    with request.urlopen(url) as response, open(filename, 'wb') as out_file:
         shutil.copyfileobj(response, out_file)
     if('gctx' in filename):
         import gzip
@@ -24,19 +23,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate bulk profiles of the specified cell type from the LINCS L1000 database.")
 
     parser.add_argument("-o", "--outdir", default='./LINCS/', help="path to output directory, default='./'")
-    parser.add_argument("--inst", type=str, default='GSE70138_Broad_LINCS_inst_info_2017-03-06.txt.gz', help="inst_info file")
-    parser.add_argument("--gctx", type=str, default='GSE70138_Broad_LINCS_Level3_INF_mlr12k_n345976x12328_2017-03-06.gctx', help="level 3 .gctx")
-    parser.add_argument("--gene", type=str, default='GSE70138_Broad_LINCS_gene_info_2017-03-06.txt.gz', help="gene_info file")
+    parser.add_argument("-c", "--celltype", default=None, required=True, help='Cell Line name. Options:  A375 (Skin),  A549 (Lung),  HCC515 (Lung),  HEPG2 (Liver),  MCF7 (Breast),  PC3 (Prostate),  VCAP (Prostate), HT29 (Colon)')
+    parser.add_argument("--inst", type=str, default='GSE70138_Broad_LINCS_inst_info_2017-03-06.txt.gz', help="inst_info file (.txt.gz)")
+    parser.add_argument("--gctx", type=str, default='GSE70138_Broad_LINCS_Level3_INF_mlr12k_n345976x12328_2017-03-06.gctx', help="LINCS L1000 level 3 GEPs (.gctx)")
+    parser.add_argument("--gene", type=str, default='GSE70138_Broad_LINCS_gene_info_2017-03-06.txt.gz', help="gene_info file (.txt.gz)")
     
     args = parser.parse_args()
 
+    cell_types = ['A375','A549','HCC515','HEPG2','MCF7','PC3','VCAP','HT29']
+
+    if not args.celltype in cell_types:
+        sys.exit('Unacceptable cell type: {}\nSee \'--help\' for acceptable cell line names. '.format(args.celltype))
     if not os.path.isdir(args.outdir):
         os.mkdir(args.outdir)
     if not (os.path.isfile(args.inst) and args.inst.endswith('.gz')):
         if args.inst == 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt.gz':
             downloadFromGEO('GSE70138_Broad_LINCS_inst_info_2017-03-06.txt.gz', 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE70nnn/GSE70138/suppl/GSE70138%5FBroad%5FLINCS%5Finst%5Finfo%5F2017%2D03%2D06%2Etxt%2Egz')
         else:
-            sys.exit("The inst_info file does not exist or is not gz file.")
+            sys.exit("The inst_info file does not exist or is not .gz file.")
     if not (os.path.isfile(args.gctx) and args.gctx.endswith('.gctx')):
         if args.gctx == 'GSE70138_Broad_LINCS_Level3_INF_mlr12k_n345976x12328_2017-03-06.gctx':
             downloadFromGEO('GSE70138_Broad_LINCS_Level3_INF_mlr12k_n345976x12328_2017-03-06.gctx.gz', 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE70nnn/GSE70138/suppl/GSE70138%5FBroad%5FLINCS%5FLevel3%5FINF%5Fmlr12k%5Fn345976x12328%5F2017%2D03%2D06%2Egctx%2Egz')
@@ -47,23 +51,23 @@ if __name__ == '__main__':
         if args.gene == 'GSE70138_Broad_LINCS_gene_info_2017-03-06.txt.gz':
             downloadFromGEO('GSE70138_Broad_LINCS_gene_info_2017-03-06.txt.gz', 'https://ftp.ncbi.nlm.nih.gov/geo/series/GSE70nnn/GSE70138/suppl/GSE70138%5FBroad%5FLINCS%5Fgene%5Finfo%5F2017%2D03%2D06%2Etxt%2Egz')
         else:
-            sys.exit("The gene_info file does not exist or is not gz file.")
+            sys.exit("The gene_info file does not exist or is not .gz file.")
 
-    cell_types = ['A375','A549','ASC','BT20','CD34','HA1E','HCC515','HELA','HEPG2','HME1','HS578T','HT29','HUES3','HUVEC','JURKAT','LNCAP','MCF10A','MCF7','MDAMB231','MNEU','NEU','NPC','PC3','SKBR3','SKL','YAPC']
 
     # read inst_info and gene_info
     inst_info = pd.read_csv(args.inst, sep='\t', compression='gzip')
     sig_info = pd.read_csv(args.gene, sep='\t', usecols=['pr_gene_id','pr_gene_symbol'], compression='gzip')
 
-    for cell in cell_types:
-        # select instance ids for a specific cell type
-        inst_ids = inst_info['inst_id'][inst_info['cell_id'] == cell]
-        # read gctx
-        gctoo = parse(args.gctx, cid=inst_ids)
-        gctoo.data_df.index = gctoo.data_df.index.astype(int)
-        # covert rowids to gene names
-        named_df = pd.merge(gctoo.data_df, sig_info, left_index=True, right_on=['pr_gene_id'], validate='1:1')
-        average_df = named_df.groupby('pr_gene_symbol').mean().dropna().drop(labels='pr_gene_id',axis=1)
-        # reverse to non-log for CIBERSORTx
-        exp_df = 2**average_df
-        exp_df.to_csv('{}/LINCS_L1000_GEP_{}.csv'.format(args.outdir, cell), sep='\t')
+    cell = args.celltype
+    
+    # select instance ids for a specific cell type
+    inst_ids = inst_info['inst_id'][inst_info['cell_id'] == cell]
+    # read gctx
+    gctoo = parse(args.gctx, cid=inst_ids)
+    gctoo.data_df.index = gctoo.data_df.index.astype(int)
+    # covert rowids to gene names
+    named_df = pd.merge(gctoo.data_df, sig_info, left_index=True, right_on=['pr_gene_id'], validate='1:1')
+    average_df = named_df.groupby('pr_gene_symbol').mean().dropna().drop(labels='pr_gene_id',axis=1)
+    # reverse to non-log for CIBERSORTx
+    exp_df = 2**average_df
+    exp_df.to_csv('{}/LINCS_L1000_GEP_{}.csv'.format(args.outdir, cell), sep='\t')
