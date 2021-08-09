@@ -103,7 +103,7 @@ elif args.method == 'logfc':
     test_kernel_df = pp.gexp.calculate_kernel_feature(cluster_norm_exp_df, cell_line_log2_mean_fc_exp_df, ess_gene_list)
     
     ## Drug response prediction
-    print('Predicting drug response for cluster {} using CaDRReS: {}'.format(cluster, model_spec_name))
+    print('Predicting drug response using CaDRReS: {}'.format(model_spec_name))
     pred_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
     print('done!')
     
