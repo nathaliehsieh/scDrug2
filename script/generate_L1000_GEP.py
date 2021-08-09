@@ -23,14 +23,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate bulk profiles of the specified cell type from the LINCS L1000 database.")
 
     parser.add_argument("-o", "--outdir", default='./LINCS/', help="path to output directory, default='./'")
-    parser.add_argument("-c", "--celltype", default=None, required=True, help='Cell Line name. Options:  A375 (Skin),  A549 (Lung),  HCC515 (Lung),  HEPG2 (Liver),  MCF7 (Breast),  PC3 (Prostate),  VCAP (Prostate), HT29 (Colon)')
+    parser.add_argument("-c", "--celltype", default=None, required=True, help='Cell Line name. Options:  A375 (malignant melanoma),  A549 (non-small cell lung carcinoma),  HCC515 (non-small cell lung adenocarcinoma),  HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma),  MCF7 (breast adenocarcinoma),  PC3 (prostate adenocarcinoma),  YAPC (Pancreatic carcinoma)')
     parser.add_argument("--inst", type=str, default='GSE70138_Broad_LINCS_inst_info_2017-03-06.txt.gz', help="inst_info file (.txt.gz)")
     parser.add_argument("--gctx", type=str, default='GSE70138_Broad_LINCS_Level3_INF_mlr12k_n345976x12328_2017-03-06.gctx', help="LINCS L1000 level 3 GEPs (.gctx)")
     parser.add_argument("--gene", type=str, default='GSE70138_Broad_LINCS_gene_info_2017-03-06.txt.gz', help="gene_info file (.txt.gz)")
     
     args = parser.parse_args()
 
-    cell_types = ['A375','A549','HCC515','HEPG2','MCF7','PC3','VCAP','HT29']
+    cell_types = ['A375','A549','HCC515','HEPG2','HT29','MCF7','PC3','YAPC']
 
     if not args.celltype in cell_types:
         sys.exit('Unacceptable cell type: {}\nSee \'--help\' for acceptable cell line names. '.format(args.celltype))
