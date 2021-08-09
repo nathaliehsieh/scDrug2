@@ -134,7 +134,9 @@ if args.GEP:
     adata_GEP = adata.copy()
     sc.pp.normalize_total(adata_GEP, target_sum=1e6)
     mat = adata_GEP.X.transpose()
-    GEP_df = pd.DataFrame(mat.toarray(), index=adata_GEP.var.index)
+    if type(mat) is not np.ndarray:
+        mat = mat.toarray()
+    GEP_df = pd.DataFrame(mat, index=adata_GEP.var.index)
 
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
