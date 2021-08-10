@@ -35,13 +35,13 @@ if not os.path.isdir(args.output):
 if not args.method in ['average', 'logfc']:
     sys.exit("The method can only be 'average' or 'logfc'.")
 
-scriptpath = '../CaDRReS-Sc-master'
+scriptpath = '/opt/CaDRReS-Sc'
 sys.path.append(os.path.abspath(scriptpath))
 
 from cadrres_sc import pp, model, evaluation, utility
 
 ## Read pre-trained model
-model_dir = '../CaDRReS-Sc-model/'
+model_dir = '/single-cell-analysis/CaDRReS-Sc-model/'
 obj_function = widgets.Dropdown(options=['cadrres-wo-sample-bias', 'cadrres-wo-sample-bias-weight'], description='Objetice function')
 model_spec_name = obj_function.value
 model_file = model_dir + '{}_param_dict_all_genes.pickle'.format(model_spec_name)
@@ -66,7 +66,7 @@ ess_gene_list = adata.var.highly_variable.index if args.hvg else gene_exp_df.ind
 
 if args.method == 'average':
     adata_exp_mean = pd.Series(adata.raw.X.mean(axis=0).tolist()[0], index=adata.raw.var.index)
-    clusters_pred_df = pd.DataFrame()
+    pred_df = pd.DataFrame()
     for cluster in clusters:
         cluster_adata = adata[adata.obs['louvain']==cluster]
         cluster_exp_df = pd.DataFrame(cluster_adata.raw.X.transpose().toarray(), index=cluster_adata.raw.var.index, columns=cluster_adata.obs.index)
@@ -79,19 +79,13 @@ if args.method == 'average':
         
         ## Drug response prediction
         print('Predicting drug response for cluster {} using CaDRReS: {}'.format(cluster, model_spec_name))
-        pred_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
+        cluster_pred_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
         print('done!')
         
-        pred_mean_df = pred_df.mean()
-        drug_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
-        pred_mean_df.index = [drug_df.loc[int(drug_id)]['Drug Name'] for drug_id in pred_mean_df.index]
-        pred_mean_df = pred_mean_df.groupby(pred_mean_df.index).mean()
-        # pred_mean_df = pred_mean_df.sort_values()
-        pred_mean_df = pred_mean_df.to_frame().transpose()
-        pred_mean_df.index = [cluster]
-        clusters_pred_df = clusters_pred_df.append(pred_mean_df)
-    clusters_pred_df.to_csv(os.path.join(args.output, 'IC50_prediction.csv'))
-
+        cluster_pred_mean_df = cluster_pred_df.mean()
+        cluster_pred_mean_df = cluster_pred_mean_df.to_frame().transpose()
+        cluster_pred_mean_df.index = [cluster]
+        pred_df = pred_df.append(cluster_pred_mean_df)
 elif args.method == 'logfc':
     cluster_norm_exp_df = pd.DataFrame(columns=clusters, index=adata.raw.var.index)
     for cluster in clusters:
@@ -103,12 +97,12 @@ elif args.method == 'logfc':
     test_kernel_df = pp.gexp.calculate_kernel_feature(cluster_norm_exp_df, cell_line_log2_mean_fc_exp_df, ess_gene_list)
     
     ## Drug response prediction
-    print('Predicting drug response using CaDRReS: {}'.format(model_spec_name))
+    print('Predicting drug response for using CaDRReS: {}'.format(model_spec_name))
     pred_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
     print('done!')
-    
-    drug_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
-    pred_df.columns = [drug_df.loc[int(drug_id)]['Drug Name'] for drug_id in pred_df.columns]
-    pred_df = pred_df.groupby(pred_df.columns, axis=1).mean()
-    pred_df.to_csv(os.path.join(args.output, 'IC50_prediction.csv'))
 
+drug_stat_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
+drug_df = pd.DataFrame({'Drug ID': pred_df.columns, 
+                        'Drug Name': [drug_stat_df.loc[int(drug_id)]['Drug Name'] for drug_id in pred_df.columns]})
+pred_df.columns = pd.MultiIndex.from_frame(drug_df)
+pred_df.to_csv(os.path.join(args.output, 'IC50_prediction.csv'))
