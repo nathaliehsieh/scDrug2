@@ -76,8 +76,9 @@ if __name__ == '__main__':
             if((p:=pearsonr(average_gep[mutual_genes].to_numpy(), cellline_gep.loc[mutual_genes, c].to_numpy())[0]) > max_p):
                 max_p = p
                 cell = c
-        print('selected cell type = {}, with Pearsonr = {:.2f}'.format(cell, max_p))
         cell = cell.split('_',1)[0]
+        print('selected cell type = {}, with Pearsonr = {:.2f}'.format(cell, max_p))
+
 
     # check if the corresponding GEP already exists
     if(os.path.isfile('{}/LINCS_L1000_GEP_{}.txt'.format(args.outdir, cell))):
