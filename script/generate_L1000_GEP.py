@@ -1,7 +1,7 @@
-# from cmapPy.pandasGEXpress.parse import parse
+from cmapPy.pandasGEXpress.parse import parse
 import argparse
-# import pandas as pd
-# import numpy as np
+import pandas as pd
+import numpy as np
 import os
 import sys
 
@@ -77,7 +77,6 @@ if __name__ == '__main__':
                 max_p = p
                 cell = c
         print('selected cell type = {}, with Pearsonr = {}', cell, max_p)
-
 
 
     # select instance ids for a specific cell type
