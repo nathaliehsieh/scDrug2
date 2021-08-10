@@ -144,11 +144,11 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--outdir", default='./', help="path to output directory, default='./'")
     parser.add_argument("-t", "--threshold", default=-0.9, type=float, help="Sensitivity threshold. Range: [-1,0), default:-0.9")
     parser.add_argument("-c", "--con_threshold", default=-0.75, type=float, help="Consistency threshold. Range: [-1,0), default:-0.75")
-    parser.add_argument("--celltype", required=True, type=str, help="Same as the cell type for decomposition. Options: A375|A549|ASC|BT20|CD34|HA1E|HCC515|HELA|HEPG2|HME1|HS578T|HT29|HUES3|HUVEC|JURKAT|LNCAP|MCF10A|MCF7|MDAMB231|MNEU|NEU|NPC|PC3|SKBR3|SKL|YAPC")
+    parser.add_argument("--celltype", required=True, type=str, help="Same as the cell type for decomposition. Options: A375 | A549 | HEPG2 | HT29 | MCF7 | PC3 | YAPC")
     parser.add_argument("--metadata", default='./GSE70138_Broad_LINCS_inst_info_2017-03-06.txt', help="the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'")
     
     args = parser.parse_args()
-    cell_types = ['A375','A549','ASC','BT20','CD34','HA1E','HCC515','HELA','HEPG2','HME1','HS578T','HT29','HUES3','HUVEC','JURKAT','LNCAP','MCF10A','MCF7','MDAMB231','MNEU','NEU','NPC','PC3','SKBR3','SKL','YAPC']
+    cell_types = ['A375','A549','HEPG2','HT29','MCF7','PC3','YAPC']
     
     # check arguments
     if not os.path.isfile(args.input):
