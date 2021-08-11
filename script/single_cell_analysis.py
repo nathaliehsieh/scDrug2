@@ -53,13 +53,14 @@ parser.add_argument("-i", "--input", required=True, help="path to input 10x dire
 parser.add_argument("-f", "--format", default='10x', help="input format, 10x (default) | csv | h5ad (Anndata object for subclustering with --clusters CLUSTERS)")
 parser.add_argument("-o", "--output", default='./', help="path to output directory, default='./'")
 parser.add_argument("-r", "--resolution", type=float, default=0.6, help="resolution for clustering, default=0.6")
-# parser.add_argument("--auto-resolution", action="store_true", help="set True to automatically determine resolution for clustering, default=False")
+parser.add_argument("--auto-resolution", action="store_true", help="automatically determine resolution for clustering")
 parser.add_argument("-m", "--metadata", default=None, help="path to metadata CSV file for batch correction (index as input in first column)")
 parser.add_argument("-b", "--batch", default=None, help="column in metadata (or adata.obs) for batch correction, e.g. 'PatientID'")
 parser.add_argument("-c", "--clusters", default=None, help="perform single cell analysis only on specified clusters, e.g. '1,3,8,9'")
 parser.add_argument("--GEP", default=True, type=lambda x: (str(x).lower() == 'true'), help="whether to generate Gene Expression Profile file, default=True")
 parser.add_argument("--annotation", action="store_true", help="perform cell type annotation")
 parser.add_argument("--gsea", action="store_true", help="perform gene set enrichment analysis (GSEA)")
+parser.add_argument("--cpus", default=1, type=int, help="number of CPU used for auto-resolution and annotation, default=1")
 
 args = parser.parse_args()
 
@@ -166,10 +167,66 @@ if not args.batch is None:
 
 
 ## Clustering
-print('Clustering...')
 sc.pp.neighbors(adata, n_pcs=20)
 sc.tl.umap(adata)
-sc.tl.louvain(adata, resolution=args.resolution)
+if args.auto_resolution:
+    print("Automatically determine clustering resolution...")
+    
+    from sklearn.metrics import silhouette_score
+    import multiprocess as mp
+    from functools import partial
+    
+    def subsample_clustering(adata, sample_n, subsample_n, resolution, subsample):
+        subadata = adata[subsample]
+        sc.tl.louvain(subadata, resolution=resolution)
+        cluster = subadata.obs['louvain'].tolist()
+        
+        subsampling_n = np.zeros((sample_n, sample_n), dtype=int)
+        coclustering_n = np.zeros((sample_n, sample_n), dtype=int)
+        
+        for i in range(subsample_n):
+            for j in range(subsample_n):
+                x = subsample[i]
+                y = subsample[j]
+                subsampling_n[x][y] += 1
+                if cluster[i] == cluster[j]:
+                    coclustering_n[x][y] += 1
+        return (subsampling_n, coclustering_n)
+    
+    rep_n = 50
+    subset = 0.5
+    sample_n = len(adata.obs)
+    subsample_n = int(sample_n * subset)
+    resolutions = np.arange(0.5, 1.1, 0.1)
+    silhouette_avg = np.zeros(len(resolutions), dtype=float)
+    cpus = mp.cpu_count()
+    for ri, r in enumerate(resolutions):
+        print("Clustering test: resolution = ", r)
+        subsamples = [np.random.choice(sample_n, subsample_n, replace=False) for t in range(rep_n)]
+        p = mp.Pool(cpus)
+        func = partial(subsample_clustering, adata, sample_n, subsample_n, r)
+        resultList = p.map(func, subsamples)
+        p.close()
+        p.join()
+        
+        subsampling_n = sum([result[0] for result in resultList])
+        coclustering_n = sum([result[1] for result in resultList])
+        
+        subsampling_n[np.where(subsampling_n == 0)] = 1e6
+        distance = 1.0 - coclustering_n / subsampling_n
+        np.fill_diagonal(distance, 0.0)
+        
+        sc.tl.louvain(adata, resolution=r, key_added = 'louvain_r' + str(r))
+        silhouette_avg[ri] = silhouette_score(distance, adata.obs['louvain_r' + str(r)], metric="precomputed")
+    
+    best_resution = resolutions[np.argmax(silhouette_avg)]
+    adata.obs['louvain'] = adata.obs['louvain_r' + str(best_resution)]
+    print("resolution with highest score: ", best_resution)
+    
+else:
+    print("Clustering with resolution = ", args.resolution)
+    sc.tl.louvain(adata, resolution=args.resolution)
+
 
 # adata.write(results_file)
 

@@ -7,3 +7,4 @@ openpyxl
 gseapy
 ipywidgets
 cmapPy
+multiprocess
