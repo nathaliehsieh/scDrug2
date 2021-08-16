@@ -181,23 +181,23 @@ if args.auto_resolution:
         sc.tl.louvain(subadata, resolution=resolution)
         cluster = subadata.obs['louvain'].tolist()
         
-        subsampling_n = np.zeros((sample_n, sample_n), dtype=int)
-        coclustering_n = np.zeros((sample_n, sample_n), dtype=int)
+        subsampling_n = np.zeros((sample_n, sample_n), dtype=bool)
+        coclustering_n = np.zeros((sample_n, sample_n), dtype=bool)
         
         for i in range(subsample_n):
             for j in range(subsample_n):
                 x = subsample[i]
                 y = subsample[j]
-                subsampling_n[x][y] += 1
+                subsampling_n[x][y] = True
                 if cluster[i] == cluster[j]:
-                    coclustering_n[x][y] += 1
+                    coclustering_n[x][y] = True
         return (subsampling_n, coclustering_n)
     
-    rep_n = 50
-    subset = 0.5
+    rep_n = 5
+    subset = 0.8
     sample_n = len(adata.obs)
     subsample_n = int(sample_n * subset)
-    resolutions = np.arange(0.5, 1.1, 0.1)
+    resolutions = np.arange(0.5, 1.6, 0.1)
     silhouette_avg = np.zeros(len(resolutions), dtype=float)
     cpus = mp.cpu_count()
     for ri, r in enumerate(resolutions):
@@ -221,11 +221,13 @@ if args.auto_resolution:
     
     best_resution = resolutions[np.argmax(silhouette_avg)]
     adata.obs['louvain'] = adata.obs['louvain_r' + str(best_resution)]
-    print("resolution with highest score: ", best_resution)
+    res = np.round(best_resution, 1)
+    print("resolution with highest score: ", res)
     
 else:
     print("Clustering with resolution = ", args.resolution)
     sc.tl.louvain(adata, resolution=args.resolution)
+    res = args.resolution
 
 
 # adata.write(results_file)
@@ -254,7 +256,8 @@ if args.annotation:
 print('Exporting UMAP...')
 sc.settings.autosave = True
 sc.settings.figdir = args.output
-sc.pl.umap(adata, color=['louvain'], use_raw=False, show=False, save='_cluster.png')
+sc.pl.umap(adata, color=['louvain'], use_raw=False, show=False, 
+           title='louvain, resolution='+str(res), save='_cluster.png')
 if not args.batch is None:
     sc.pl.umap(adata, color=[args.batch], use_raw=False, show=False, save='_batch.png')
 if args.annotation:
