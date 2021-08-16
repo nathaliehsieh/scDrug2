@@ -201,6 +201,7 @@ if args.auto_resolution:
     silhouette_avg = np.zeros(len(resolutions), dtype=float)
     cpus = mp.cpu_count()
     for ri, r in enumerate(resolutions):
+        r = np.round(r)
         print("Clustering test: resolution = ", r)
         subsamples = [np.random.choice(sample_n, subsample_n, replace=False) for t in range(rep_n)]
         p = mp.Pool(cpus)
@@ -218,6 +219,8 @@ if args.auto_resolution:
         
         sc.tl.louvain(adata, resolution=r, key_added = 'louvain_r' + str(r))
         silhouette_avg[ri] = silhouette_score(distance, adata.obs['louvain_r' + str(r)], metric="precomputed")
+        print("robustness score = ", silhouette_avg[ri])
+        print()
     
     best_resution = resolutions[np.argmax(silhouette_avg)]
     adata.obs['louvain'] = adata.obs['louvain_r' + str(best_resution)]
