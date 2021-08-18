@@ -45,7 +45,7 @@ from cadrres_sc import pp, model, evaluation, utility
 # for each patient, if cell cluster is less than 5%, then we don't consider that cluster 
 freq_cutoff = 0.05
 # estimate cell death percentage based on log2 of the median IC50 observed in HNSC cell lines (GDSC)
-ref_type = 'log2_median_ic50_hn'
+ref_type = 'log2_median_ic50'
 
 ## Read drug statistics
 drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
