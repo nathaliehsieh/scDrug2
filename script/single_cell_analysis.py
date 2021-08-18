@@ -8,7 +8,8 @@ def runGSEAPY(adata, group_by='louvain', gene_sets=['GO_Biological_Process_2021'
 
     df_list = []
     cluster_list = []
-    for celltype in set(adata.obs[group_by]):
+    celltypes = sorted(adata.obs[group_by].unique())
+    for celltype in celltypes:
         indlist_logfc = adata.uns['rank_genes_groups']['logfoldchanges'][celltype] >= logfc_threshold
         indlist_adjp = adata.uns['rank_genes_groups']['pvals_adj'][celltype] <= 1e-2
         indlist_p = adata.uns['rank_genes_groups']['pvals'][celltype] <= 1e-2
@@ -139,8 +140,9 @@ if args.GEP:
         mat = mat.toarray()
     GEP_df = pd.DataFrame(mat, index=adata_GEP.var.index)
 
-sc.pp.normalize_total(adata, target_sum=1e4)
-sc.pp.log1p(adata)
+if not args.format == 'h5ad':
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
 
 sc.pp.highly_variable_genes(adata)
 adata.raw = adata
