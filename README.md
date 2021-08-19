@@ -85,30 +85,33 @@ optional arguments:
   --annotation          perform cell type annotation
   --gsea                perform gene set enrichment analysis (GSEA)
   --cpus CPUS           number of CPU used for auto-resolution and annotation, default=1
-
 ```
 
-- Apply **Single-Cell Data Analysis** with batch correction, cell type annotation and GSEA.
+- Apply **Single-Cell Data Analysis** with batch correction, clustering resolution 1.0, cell type annotation and GSEA.
 
 ```
-python single_cell_analysis.py --input INPUT --metadata METADATA --batch BATCH --annotation --gsea
+python single_cell_analysis.py --input INPUT --metadata METADATA --batch BATCH --resolution 1.0 --annotation --gsea
 ```
 
-- **Single-Cell Data Analysis** for sub-clustering with batch correction.
+- **Single-Cell Data Analysis** for sub-clustering with batch correction and automatically determined clustering resolution run under 2 cpus.
 
 ```
-python single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH
+python single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH --auto-resolution --cpus 2
 ```
 
 
-### IC50 Prediction
+### Drug Response Prediction
 
-**IC50 Prediction** takes the Scanpy Anndata generated in **Single-Cell Data Analysis** as input, estimates IC50 drug response on specified clusters with [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and outputs `IC50_prediction.csv` as the prediction result.
+**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, and reported **IC50, single and combinatorial drug kill response** on specified clusters via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction).
+
+#### IC50 Prediction
+
+**IC50 Prediction** took the Scanpy Anndata as input, and output cluster-specific `IC50_prediction.csv` as the prediction result.
 
 - Run `python IC50_prediction.py -h` to show the help messages as follow for **IC50 Prediction**.
 
 ```
-usage: IC50_prediction.py [-h] -i INPUT [-o OUTPUT] [-c CLUSTERS]
+usage: IC50_prediction.py [-h] -i INPUT [-o OUTPUT] [-c CLUSTERS] [-m METHOD] [--hvg]
 
 IC50 prediction
 
@@ -120,12 +123,69 @@ optional arguments:
                         path to output directory, default='./'
   -c CLUSTERS, --clusters CLUSTERS
                         perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'
+  -m METHOD, --method METHOD
+                        method used to produce clusterwise IC50 prediction, options: average | logfc, default: average
+  --hvg                 only use highly variable genes to predict IC50
 ```
 
-- Predict IC50 drug response on specified clusters with **IC50 Prediction**.
+- Predict IC50 drug response on specified clusters with **IC50 Prediction**. For efficiency, run IC50 prediction with arguments `--metod logfc` or `--hvg`.
 
 ```
 python IC50_prediction.py --input scanpyobj.h5ad --clusters CLUSTERS
+```
+
+#### Drug Kill Prediction
+
+With cluster-specific `IC50_prediction.csv` and the cluster proportion information, **Drug Kill Prediction** computed cell death precentages `drug_kill_prediction.csv` based on the median IC50 observed in GDSC cell lines drug response.
+
+- Run `python drug_kill_prediction.py -h` to show the help messages as follow for **Drug Kill Prediction**.
+
+```
+usage: drug_kill_prediction.py [-h] -i INPUT -p PROPORTION [-o OUTPUT]
+
+Drug kill prediction
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        path to cluster-specific IC50 prediction (CSV file)
+  -p PROPORTION, --proportion PROPORTION
+                        path to cluster proportion CSV file
+  -o OUTPUT, --output OUTPUT
+                        path to output directory, default='./'
+```
+
+- Predict drug kill response with **Drug Kill Prediction**.
+
+```
+python drug_kill_prediction.py --input IC50_prediction.csv --proportion PROPORTION
+```
+
+#### Combinatorial Drug Kill Prediction
+
+With `drug_kill_prediction.csv` and the drug list of interest, **Combinatorial Drug Kill Prediction** output `combinatorial_drug_kill_prediction.csv` storing cell death percentages to drug pairs within combinations in the drug list.
+
+- Run `python combinatorial_drug_kill_prediction.py -h` to show the help messages as follow for **Combinatorial Drug Kill Prediction**.
+
+```
+usage: combinatorial_drug_kill_prediction.py [-h] -i INPUT -d DRUGS [-o OUTPUT]
+
+Combinatorial drug kill prediction
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        path to cluster-specific IC50 prediction (CSV file)
+  -d DRUGS, --drugs DRUGS
+                        path to drugs list file
+  -o OUTPUT, --output OUTPUT
+                        path to output directory, default='./'
+```
+
+- Predict combinatorial drug kill response with **Drug Kill Prediction**.
+
+```
+python combinatorial_drug_kill_prediction.py --input drug_kill_prediction.csv --drugs DRUGS
 ```
 
 ### Treatment Selection
