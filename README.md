@@ -49,18 +49,18 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 ### Single-Cell Data Analysis
 
-**Single-Cell Data Analysis** takes the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, performs fundamental data analysis, and outputs a Scanpy Anndata object `scanpyobj.h5ad`, the UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
+**Single-Cell Data Analysis** took the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, performed fundamental data analysis, and output a Scanpy Anndata object `scanpyobj.h5ad`, the UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
 
-Optionally, **Single-Cell Data Analysis** carries out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provides additional UMAPs showing batch effects and cell type (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`. For cell type annotation, we use [scMatch: a single-cell gene expression profile annotation tool using reference datasets](https://github.com/asrhou/scMatch).
+Optionally, **Single-Cell Data Analysis** carried out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provided additional UMAPs showing batch effects and cell type (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`. For cell type annotation, we used [scMatch: a single-cell gene expression profile annotation tool using reference datasets](https://github.com/asrhou/scMatch).
 
-Furthermore, **Single-Cell Data Analysis** can take previously produced Anndata as input and apply sub-clustering on specified clusters.
+Furthermore, **Single-Cell Data Analysis** could take previously produced Anndata as input and applied sub-clustering on specified clusters.
 
 
 - Run `python single_cell_analysis.py -h` to show the help messages as follow for **Single-Cell Data Analysis**.
 
 ```
-usage: single_cell_analysis.py [-h] -i INPUT [-f FORMAT] [-o OUTPUT] [-r RESOLUTION] [-m METADATA] [-b BATCH]
-                               [-c CLUSTERS] [-a] [-g]
+usage: single_cell_analysis.py [-h] -i INPUT [-f FORMAT] [-o OUTPUT] [-r RESOLUTION] [--auto-resolution] [-m METADATA] [-b BATCH] [-c CLUSTERS] 
+                               [--GEP GEP] [--annotation] [--gsea] [--cpus CPUS]
 
 scRNA-seq data analysis
 
@@ -74,14 +74,18 @@ optional arguments:
                         path to output directory, default='./'
   -r RESOLUTION, --resolution RESOLUTION
                         resolution for clustering, default=0.6
+  --auto-resolution     automatically determine resolution for clustering
   -m METADATA, --metadata METADATA
                         path to metadata CSV file for batch correction (index as input in first column)
   -b BATCH, --batch BATCH
                         column in metadata (or adata.obs) for batch correction, e.g. 'PatientID'
   -c CLUSTERS, --clusters CLUSTERS
                         perform single cell analysis only on specified clusters, e.g. '1,3,8,9'
-  -a, --annotation      perform cell type annotation
-  -g, --gsea            perform gene set enrichment analysis (GSEA)
+  --GEP GEP             whether to generate Gene Expression Profile file, default=True
+  --annotation          perform cell type annotation
+  --gsea                perform gene set enrichment analysis (GSEA)
+  --cpus CPUS           number of CPU used for auto-resolution and annotation, default=1
+
 ```
 
 - Apply **Single-Cell Data Analysis** with batch correction, cell type annotation and GSEA.
