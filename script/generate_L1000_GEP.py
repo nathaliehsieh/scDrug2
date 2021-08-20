@@ -68,7 +68,7 @@ if __name__ == '__main__':
         from scipy.stats import pearsonr
 
         average_gep = pd.read_csv(args.gep, delimiter='\t', index_col=0).mean(axis=1)
-        cellline_gep = pd.read_csv('./LINCS/CCLE_GEP.csv', index_col=0)
+        cellline_gep = pd.read_csv('/single-cell-analysis/LINCS/CCLE_GEP.csv', index_col=0)
         # calculate Pearson's correlation between average scGEP and the bulk GEP for each cell line
         mutual_genes = [x for x in average_gep.index if x in cellline_gep.index]
         max_p = float('-inf')
