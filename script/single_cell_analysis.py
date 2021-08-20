@@ -201,12 +201,11 @@ if args.auto_resolution:
     subsample_n = int(sample_n * subset)
     resolutions = np.arange(0.5, 1.6, 0.1)
     silhouette_avg = np.zeros(len(resolutions), dtype=float)
-    cpus = mp.cpu_count()
     for ri, r in enumerate(resolutions):
         r = np.round(r)
         print("Clustering test: resolution = ", r)
         subsamples = [np.random.choice(sample_n, subsample_n, replace=False) for t in range(rep_n)]
-        p = mp.Pool(cpus)
+        p = mp.Pool(args.cpus)
         func = partial(subsample_clustering, adata, sample_n, subsample_n, r)
         resultList = p.map(func, subsamples)
         p.close()
@@ -250,7 +249,8 @@ if args.annotation:
     dat.to_csv(os.path.join(args.output, 'cluster_mean_exp.csv'))
     
     os.system('python /opt/scMatch/scMatch.py --refDS /opt/scMatch/refDB/FANTOM5 \
-              --dFormat csv --testDS ' + os.path.join(args.output, 'cluster_mean_exp.csv'))
+              --dFormat csv --testDS {} --coreNum {}'.format(
+              os.path.join(args.output, 'cluster_mean_exp.csv'), args.cpus))
     
     # Cell annotation result
     scMatch_cluster_df = pd.read_csv(os.path.join(args.output, 'cluster_mean_exp') + '/annotation_result_keep_all_genes/human_Spearman_top_ann.csv')
