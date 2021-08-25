@@ -148,7 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--metadata", default='./GSE70138_Broad_LINCS_inst_info_2017-03-06.txt', help="the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'")
     
     args = parser.parse_args()
-    cell_types = ['A375','A549','HEPG2','HT29','MCF7','PC3','YAPC']
+    cell_types = ['A375','A549','HCC515', 'HEPG2','HT29','MCF7','PC3','YAPC']
     
     # check arguments
     if not os.path.isfile(args.input):
