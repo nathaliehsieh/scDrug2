@@ -70,7 +70,6 @@ if not os.path.isfile(bulk_path):
     
     def downloadFromGEO(filename, url):
         if not os.path.isfile(filename):
-            print(filename.rsplit('.',1)[0])
             if 'gctx' in filename and os.path.isfile(filename.rsplit('.',1)[0]):
                 return
             print('downloading {} from the GEO website...'.format(filename.rsplit('/',1)[1]))
@@ -96,8 +95,8 @@ if not os.path.isfile(bulk_path):
 
     # select instance ids for a specific cell type
     inst_ids = inst_info['inst_id'][inst_info['cell_id'] == cell]
-    # read gctx
-    gctoo = parse(file_gctx, cid=inst_ids)
+    # read gctx 
+    gctoo = parse(file_gctx.rsplit('.',1)[0], cid=inst_ids)
     gctoo.data_df.index = gctoo.data_df.index.astype(int)
     # covert rowids to gene names
     named_df = pd.merge(gctoo.data_df, sig_info, left_index=True, right_on=['pr_gene_id'], validate='1:1')
