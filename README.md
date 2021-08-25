@@ -6,7 +6,7 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 - **Single-Cell Data Analysis** performed data preprocessing, clustering, cell type annotation and Gene Set Enrichment Analysis (GSEA). 
 
-- **Drug Response Prediction** estimated the half maximal inhibitory concentration (IC50) of cell clusters, and reported the cell death percentages to drugs and drug combinations.
+- **Drug Response Prediction** estimated the half maximal inhibitory concentration (IC50) of cell clusters, and reported the cell death percentages as drug kill efficacy.
 
 - **Treatment Selection** lists treatment combinations of given cell clusters.
 
@@ -49,9 +49,9 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 ### Single-Cell Data Analysis
 
-**Single-Cell Data Analysis** took the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, performed fundamental data analysis, and output a Scanpy Anndata object `scanpyobj.h5ad`, the UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
+**Single-Cell Data Analysis** took the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, performed fundamental data analysis, and output a Scanpy Anndata object `scanpyobj.h5ad`, a UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
 
-Optionally, **Single-Cell Data Analysis** carried out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provided additional UMAPs showing batch effects and cell type (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`. For cell type annotation, we used [scMatch: a single-cell gene expression profile annotation tool using reference datasets](https://github.com/asrhou/scMatch).
+Optionally, **Single-Cell Data Analysis** carried out batch correction, cell type annotation and Gene Set Enrichment Analysis (GSEA), and provided additional UMAPs showing batch effects and cell types (`umap_batch.png` and `umap_cell_type.png`), and the GSEA result `GSEA_results.csv`. For cell type annotation, we used [scMatch: a single-cell gene expression profile annotation tool using reference datasets](https://github.com/asrhou/scMatch).
 
 Furthermore, **Single-Cell Data Analysis** could take previously produced Anndata as input and applied sub-clustering on specified clusters.
 
@@ -102,18 +102,14 @@ python3 single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH --auto-reso
 
 ### Drug Response Prediction
 
-**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, and reported **IC50, single and combinatorial drug kill response** on specified clusters via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction).
+**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported IC50 and cell death percentages to drugs in GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and output the prediction result `drug_response_prediction.csv`.
 
-#### IC50 Prediction
-
-**IC50 Prediction** took the Scanpy Anndata as input, and output cluster-specific `IC50_prediction.csv` as the prediction result.
-
-- Run `python3 IC50_prediction.py -h` to show the help messages as follow for **IC50 Prediction**.
+- Run `python3 drug_response_prediction.py -h` to show the help messages as follow for **Drug Response Prediction**.
 
 ```
-usage: IC50_prediction.py [-h] -i INPUT [-o OUTPUT] [-c CLUSTERS] [-m METHOD] [--hvg]
+usage: drug_response_prediction.py [-h] -i INPUT [-o OUTPUT] [--hvg]
 
-IC50 prediction
+Drug response prediction
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -121,125 +117,32 @@ optional arguments:
                         path to input Anndata object (h5ad file)
   -o OUTPUT, --output OUTPUT
                         path to output directory, default='./'
-  -c CLUSTERS, --clusters CLUSTERS
-                        perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'
-  -m METHOD, --method METHOD
-                        method used to produce clusterwise IC50 prediction, options: average | logfc, default: average
   --hvg                 only use highly variable genes to predict IC50
 ```
 
-- Predict IC50 drug response on specified clusters with **IC50 Prediction**. For efficiency, run IC50 prediction with arguments `--metod logfc` or `--hvg`.
+- Predict IC50 and drug kill response on input Anndata with **Drug Response Prediction**. For efficiency, run the following command with `--hvg`.
 
 ```
-python3 IC50_prediction.py --input scanpyobj.h5ad --clusters CLUSTERS
+python3 drug_response_prediction.py --input scanpyobj.h5ad
 ```
 
-#### Drug Kill Prediction
-
-With cluster-specific `IC50_prediction.csv` and the cluster proportion information, **Drug Kill Prediction** computed cell death precentages `drug_kill_prediction.csv` based on the median IC50 observed in GDSC cell lines drug response.
-
-- Run `python3 drug_kill_prediction.py -h` to show the help messages as follow for **Drug Kill Prediction**.
-
-```
-usage: drug_kill_prediction.py [-h] -i INPUT -p PROPORTION [-o OUTPUT]
-
-Drug kill prediction
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        path to cluster-specific IC50 prediction (CSV file)
-  -p PROPORTION, --proportion PROPORTION
-                        path to cluster proportion CSV file
-  -o OUTPUT, --output OUTPUT
-                        path to output directory, default='./'
-```
-
-- Predict drug kill response with **Drug Kill Prediction**.
-
-```
-python3 drug_kill_prediction.py --input IC50_prediction.csv --proportion PROPORTION
-```
-
-#### Combinatorial Drug Kill Prediction
-
-With `drug_kill_prediction.csv` and the drug list of interest, **Combinatorial Drug Kill Prediction** output `combinatorial_drug_kill_prediction.csv` storing cell death percentages to drug pairs within combinations in the drug list.
-
-- Run `python3 combinatorial_drug_kill_prediction.py -h` to show the help messages as follow for **Combinatorial Drug Kill Prediction**.
-
-```
-usage: combinatorial_drug_kill_prediction.py [-h] -i INPUT -d DRUGS [-o OUTPUT]
-
-Combinatorial drug kill prediction
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        path to cluster-specific IC50 prediction (CSV file)
-  -d DRUGS, --drugs DRUGS
-                        path to drugs list file
-  -o OUTPUT, --output OUTPUT
-                        path to output directory, default='./'
-```
-
-- Predict combinatorial drug kill response with **Drug Kill Prediction**.
-
-```
-python3 combinatorial_drug_kill_prediction.py --input drug_kill_prediction.csv --drugs DRUGS
-```
 
 ### Treatment Selection
 
-In **Treatment Selection**, we first **generated bulk GEPs** from the LINCS L1000 database and **imputed cell fractions** of `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerated the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **selected treatment combinations** from the LINCS L1000 database with the CIBERSORTx result.
-
-#### Generate L1000 GEP
-
-From `GEP.txt` created in **Single-Cell Data Analysis**, **Generate L1000 GEP** generated bulk GEP `LINCS_L1000_GEP_*.txt` from the LINCS L1000 database of a user-specified or automatically determined cell type of eight reference cell lines, including A375 (malignant melanoma), A549 (non-small cell lung carcinoma), HCC515 (non-small cell lung adenocarcinoma), HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma), MCF7 (breast adenocarcinoma), PC3 (prostate adenocarcinoma), and YAPC (Pancreatic carcinoma).
-
-- Run `python3 generate_L1000_GEP.py -h` to show the help messages as follow for **Generate L1000 GEP**.
-
-```
-usage: generate_L1000_GEP.py [-h] [-o OUTDIR] [-c CELLTYPE] [--inst INST] [--gctx GCTX] [--gene GENE] [--auto AUTO] [--gep GEP]
-
-Generate bulk profiles of the specified cell type from the LINCS L1000 database.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -o OUTDIR, --outdir OUTDIR
-                        Path to output directory, default='./'
-  -c CELLTYPE, --celltype CELLTYPE
-                        Cell Line name. Options: A375 (malignant melanoma), A549 (non-small cell lung carcinoma), 
-                        HCC515 (non-small cell lung adenocarcinoma), HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma), 
-                        MCF7 (breast adenocarcinoma), PC3 (prostate adenocarcinoma), YAPC (Pancreatic carcinoma)
-  --inst INST           Path to inst_info file (.txt.gz)
-  --gctx GCTX           Path to LINCS L1000 level 3 GEPs (.gctx)
-  --gene GENE           Path to gene_info file (.txt.gz)
-  --auto AUTO           Whether to automatically determine the reference cell type, default=False.
-  --gep GEP             Path to GEP.txt for cell type determination.
-```
-
-- Generate LINCS L1000 bulk GEP from automatically determined cell type.
-
-```
-python3 generate_L1000_GEP.py --auto TRUE --gep GEP.txt
-```
-
-- Generate LINCS L1000 bulk GEP from sepcified cell type with information files.
-
-```
-python3 generate_L1000_GEP.py --celltype CELLTYPE --gctx GCTX --gene GENE --inst INST --gep GEP.txt
-```
+In **Treatment Selection**, we first **imputed cell fractions** of bulk GEPs from the LINCS L1000 database with single-cell GEP `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerated the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **selected treatment combinations** from the LINCS L1000 database with the CIBERSORTx result.
 
 #### Impute Cell Fractions
 
-With the single-cell and bulk GEPs, `GEP.txt` created in **Single-Cell Data Analysis** and `LINCS_L1000_GEP_*.txt` from the previous step, **Impute Cell Fractions** took a reference sample file from scRNA-seq data and a mixture matrix, both within the input directory, as input, to run CIBERSORTx Cell Fractions, and output CIBERSORTx result files to the output directory, including `CIBERSORTx_Results.txt`.
+**Impute Cell Fractions** took the input directory containing the reference sample file `GEP.txt` as input to run CIBERSORTx Cell Fractions with bulk GEP of user specified or automatically determined cell type, and output CIBERSORTx result files to the output directory, including `CIBERSORTx_Adjusted.txt`. The cell type for bulk GEP involved A375 (malignant melanoma),  A549 (non-small cell lung carcinoma),  HCC515 (non-small cell lung adenocarcinoma),  HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma),  MCF7 (breast adenocarcinoma),  PC3 (prostate adenocarcinoma),  YAPC (Pancreatic carcinoma).
 
 - Run `python3 CIBERSORTx_fractions.py -h` to show the help messages as follow for **Impute Cell Fractions**.
 
 ```
-usage: CIBERSORTx_fractions.py [-h] -i INPUT [-o OUTPUT] -u USERNAME -t TOKEN -r REFSAMPLE -m MIXTURE
+usage: CIBERSORTx_fractions.py [-h] -i INPUT [-o OUTPUT] -u USERNAME -t TOKEN -r REFSAMPLE
+                               [--celltype CELLTYPE]
 
-impute cell fractions
+impute the fractions of previous identified cell subsets under each bulk sample in the LINCS L1000
+database.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -252,22 +155,25 @@ optional arguments:
   -t TOKEN, --token TOKEN
                         token obtained from CIBERSORTx website
   -r REFSAMPLE, --refsample REFSAMPLE
-                        reference sample file from single cell RNA sequencing data
-  -m MIXTURE, --mixture MIXTURE
-                        mixture matrix required for running CIBERSORTx
+                        absolute path to the single-cell sample file
+  --celltype CELLTYPE   choose a cell line from the options. If no name is provided, we will automatically
+                        determine the cell type. Options: A375 (malignant melanoma), A549 (non-small cell
+                        lung carcinoma), HCC515 (non-small cell lung adenocarcinoma), HEPG2 (hepatocellular
+                        carcinoma), HT29 (colorectal adenocarcinoma), MCF7 (breast adenocarcinoma), PC3
+                        (prostate adenocarcinoma), YAPC (Pancreatic carcinoma)
 ```
 
-- **Impute Cell Fractions** with CIBERSORTx Cell Fractions.
+-  **Impute Cell Fractions** via CIBERSORTx Cell Fractions with single-cell GEP `GEP.txt` and LINCS L1000 bulk GEP of automatically determined cell type.
 
 ```
-python3 CIBERSORTx_fractions.py --input INPUT --username USERNAME --token TOKEN --refsample GEP.txt --mixture MIXTURE
+python3 CIBERSORTx_fractions.py --input INPUT --username USERNAME --token TOKEN --refsample GEP.txt
 ```
 
 Note: To obtain `USERNAME` and `TOKEN`, register and request for access to CIBERSORTx Docker on [CIBERSORTx](https://cibersortx.stanford.edu) website.
 
 #### Select Treatment Combinations
 
-**Select Treatment Combinations** took the CIBERSORTx result `CIBERSORTx_Results.txt` and the L1000 instance info file as input, selects treatment combinations for given cell type from the LINCS L1000 database, and outputs the treatment combinations list `CIBERSORTx_Results_solution_list_*.csv`.
+**Select Treatment Combinations** took the CIBERSORTx result `CIBERSORTx_Adjusted.txt` and the L1000 instance info file as input, selects treatment combinations for given cell type from the LINCS L1000 database, and outputs the treatment combinations list `CIBERSORTx_Results_solution_list_*.csv`.
 
 - Run `python3 treatment_selection.py -h` to show the help messages as follow for **Select Treatment Combinations**.
 
@@ -293,5 +199,5 @@ optional arguments:
 - **Select Treatment Combinations** with the L1000 metadata.
 
 ```
-python3 treatment_selection.py --input CIBERSORTx_Results.txt --celltype CELLTYPE --metadata METADATA
+python3 treatment_selection.py --input CIBERSORTx_Adjusted.txt --celltype CELLTYPE --metadata METADATA
 ```
