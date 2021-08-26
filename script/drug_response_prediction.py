@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description="Drug response prediction")
 
 parser.add_argument("-i", "--input", required=True, help="path to input Anndata object (h5ad file)")
 parser.add_argument("-o", "--output", default='./', help="path to output directory, default='./'")
-parser.add_argument("--hvg", action="store_true", help="only use highly variable genes to predict IC50")
+parser.add_argument("-c", "--clusters", default='All', type=str, help="perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'")
 
 args = parser.parse_args()
 
@@ -29,11 +29,14 @@ if args.input[-5:] != '.h5ad':
 if not os.path.isdir(args.output):
     sys.exit("The output directory does not exist.")
 
-
 scriptpath = '/opt/CaDRReS-Sc'
 sys.path.append(os.path.abspath(scriptpath))
 
 from cadrres_sc import pp, model, evaluation, utility
+
+## Read drug statistics
+drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
+drug_info_df.index = drug_info_df.index.astype(str)
 
 ### IC50 prediction
 ## Read pre-trained model
@@ -49,43 +52,48 @@ gene_exp_df = gene_exp_df.groupby(gene_exp_df.index).mean()
 
 ## Load cluster-specific gene expression profile
 adata = sc.read(args.input)
-adata_exp_df = pd.DataFrame(adata.raw.X.transpose().toarray(), index=adata.raw.var.index, columns=adata.obs.index)
+if args.clusters == 'All':
+    clusters = sorted(adata.obs['louvain'].unique(), key=int)
+else:
+    clusters = [x.strip() for x in args.clusters.split(',')]
+
+cluster_norm_exp_df = pd.DataFrame(columns=clusters, index=adata.raw.var.index)
+for cluster in clusters:
+    cluster_norm_exp_df[cluster] =  adata.raw.X[adata.obs['louvain']==cluster].mean(axis=0).T \
+                                    if np.sum(adata.raw.X[adata.obs['louvain']==cluster]) else 0.0
 
 ## Read essential genes list
-ess_gene_list = adata.var.highly_variable.index if args.hvg else gene_exp_df.index.dropna().tolist()
+ess_gene_list = gene_exp_df.index.dropna().tolist()
 
 ## Calculate fold-change
 cell_line_log2_mean_fc_exp_df, cell_line_mean_exp_df = pp.gexp.normalize_log2_mean_fc(gene_exp_df)
-adata_log2_mean_fc_exp_df, adata_mean_exp_df = pp.gexp.normalize_log2_mean_fc(adata_exp_df)
+    
+adata_exp_mean = pd.Series(adata.raw.X.mean(axis=0).tolist()[0], index=adata.raw.var.index)
+cluster_norm_exp_df = cluster_norm_exp_df.sub(adata_exp_mean, axis=0)
 
 ## Calculate kernel feature
-test_kernel_df = pp.gexp.calculate_kernel_feature(adata_log2_mean_fc_exp_df, cell_line_log2_mean_fc_exp_df, ess_gene_list)
+test_kernel_df = pp.gexp.calculate_kernel_feature(cluster_norm_exp_df, cell_line_log2_mean_fc_exp_df, ess_gene_list)
 
 ## Drug response prediction
 print('Predicting drug response for using CaDRReS: {}'.format(model_spec_name))
-cell_pred_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
+pred_ic50_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
 print('done!')
 
-pred_ic50_df = cell_pred_df.mean().to_frame().T
-
-
 ### Drug kill prediction
-## Read drug statistics
-drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
-drug_info_df.index = drug_info_df.index.astype(str)
 ref_type = 'log2_median_ic50'
 drug_list = pred_ic50_df.columns
+drug_info_df = drug_info_df.loc[drug_list]
 
 ## Predict cell death percentage at the ref_type dosage
 pred_delta_df = pd.DataFrame(pred_ic50_df.values - drug_info_df[ref_type].values, columns=drug_list)
 pred_cv_df = 100 / (1 + (np.power(2, -pred_delta_df)))
 pred_kill_df = 100 - pred_cv_df
 
-pred_df = pd.DataFrame({'Drug ID': pred_ic50_df.columns,
-                        'Drug Name': [drug_info_df.loc[drug_id]['Drug Name'] for drug_id in pred_ic50_df.columns],
-                        'IC50 Prediction': cell_pred_df.mean().tolist(), 
-                        'Drug Kill Prediction': pred_kill_df.loc[0].tolist()})
-
-pred_df.round(3).to_csv(os.path.join(args.output, 'drug_response_prediction.csv'), index=False)
+drug_df = pd.DataFrame({'Drug ID': drug_list, 
+                        'Drug Name': [drug_info_df.loc[drug_id]['Drug Name'] for drug_id in drug_list]})
+pred_ic50_df.columns = pd.MultiIndex.from_frame(drug_df)
+pred_ic50_df.round(3).to_csv(os.path.join(args.output, 'IC50_prediction.csv'))
+pred_kill_df.columns = pd.MultiIndex.from_frame(drug_df)
+pred_kill_df.round(3).to_csv(os.path.join(args.output, 'drug_kill_prediction.csv'))
 
 
