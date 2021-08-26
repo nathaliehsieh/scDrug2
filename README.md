@@ -102,12 +102,12 @@ python3 single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH --auto-reso
 
 ### Drug Response Prediction
 
-**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported IC50 and cell death percentages to drugs in GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and output the prediction result `drug_response_prediction.csv`.
+**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported clusterwise IC50 and cell death percentages to drugs in GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and output the prediction results `IC50_prediction.csv` and `drug_kill_prediction.csv`.
 
 - Run `python3 drug_response_prediction.py -h` to show the help messages as follow for **Drug Response Prediction**.
 
 ```
-usage: drug_response_prediction.py [-h] -i INPUT [-o OUTPUT] [--hvg]
+usage: drug_response_prediction.py [-h] -i INPUT [-o OUTPUT] [-c CLUSTERS]
 
 Drug response prediction
 
@@ -117,10 +117,11 @@ optional arguments:
                         path to input Anndata object (h5ad file)
   -o OUTPUT, --output OUTPUT
                         path to output directory, default='./'
-  --hvg                 only use highly variable genes to predict IC50
+  -c CLUSTERS, --clusters CLUSTERS
+                        perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'
 ```
 
-- Predict IC50 and drug kill response on input Anndata with **Drug Response Prediction**. For efficiency, run the following command with `--hvg`.
+- Predict IC50 and drug kill response on specified clusters (here for default all clusters) with **Drug Response Prediction**.
 
 ```
 python3 drug_response_prediction.py --input scanpyobj.h5ad
