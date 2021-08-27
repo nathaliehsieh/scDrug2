@@ -134,40 +134,35 @@ In **Treatment Selection**, we first **imputed cell fractions** of bulk GEPs fro
 
 #### Impute Cell Fractions
 
-**Impute Cell Fractions** took the input directory containing the reference sample file `GEP.txt` as input to run CIBERSORTx Cell Fractions with bulk GEP of user specified or automatically determined cell type, and output CIBERSORTx result files to the output directory, including `CIBERSORTx_Adjusted.txt`. The cell type for bulk GEP involved A375 (malignant melanoma),  A549 (non-small cell lung carcinoma),  HCC515 (non-small cell lung adenocarcinoma),  HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma),  MCF7 (breast adenocarcinoma),  PC3 (prostate adenocarcinoma),  YAPC (Pancreatic carcinoma).
+**Impute Cell Fractions** took the reference sample file `GEP.txt` as input to run CIBERSORTx Cell Fractions with bulk GEP of user specified or automatically determined cell type, and output CIBERSORTx result files to the output directory, including `CIBERSORTx_Adjusted.txt`. The cell type for bulk GEP involved A375 (malignant melanoma),  A549 (non-small cell lung carcinoma),  HCC515 (non-small cell lung adenocarcinoma),  HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma),  MCF7 (breast adenocarcinoma),  PC3 (prostate adenocarcinoma),  YAPC (Pancreatic carcinoma).
 
 - Run `python3 CIBERSORTx_fractions.py -h` to show the help messages as follow for **Impute Cell Fractions**.
 
 ```
-usage: CIBERSORTx_fractions.py [-h] -i INPUT [-o OUTPUT] -u USERNAME -t TOKEN -r REFSAMPLE
-                               [--celltype CELLTYPE]
+usage: CIBERSORTx_fractions.py [-h] -i INPUT [-o OUTPUT] -u USERNAME -t TOKEN [--celltype CELLTYPE]
 
-impute the fractions of previous identified cell subsets under each bulk sample in the LINCS L1000
-database.
+impute the fractions of previous identified cell subsets under each bulk sample in the LINCS L1000 database.
 
 optional arguments:
   -h, --help            show this help message and exit
   -i INPUT, --input INPUT
-                        path to input directory
+                        path to input single-cell GEP file
   -o OUTPUT, --output OUTPUT
                         path to output directory, default='./'
   -u USERNAME, --username USERNAME
                         email address registered on CIBERSORTx website
   -t TOKEN, --token TOKEN
                         token obtained from CIBERSORTx website
-  -r REFSAMPLE, --refsample REFSAMPLE
-                        absolute path to the single-cell sample file
-  --celltype CELLTYPE   choose a cell line from the options. If no name is provided, we will automatically
-                        determine the cell type. Options: A375 (malignant melanoma), A549 (non-small cell
-                        lung carcinoma), HCC515 (non-small cell lung adenocarcinoma), HEPG2 (hepatocellular
-                        carcinoma), HT29 (colorectal adenocarcinoma), MCF7 (breast adenocarcinoma), PC3
-                        (prostate adenocarcinoma), YAPC (Pancreatic carcinoma)
+  --celltype CELLTYPE   choose a cell line from the options. If no name is provided, we will automatically determine the cell type. 
+                        Options: A375 (malignant melanoma), A549 (non-small cell lung carcinoma), HCC515 (non-small cell lung adenocarcinoma), 
+                        HEPG2 (hepatocellular carcinoma), HT29 (colorectal adenocarcinoma), MCF7 (breast adenocarcinoma), PC3 (prostate adenocarcinoma), 
+                        YAPC (Pancreatic carcinoma)
 ```
 
 -  **Impute Cell Fractions** via CIBERSORTx Cell Fractions with single-cell GEP `GEP.txt` and LINCS L1000 bulk GEP of automatically determined cell type.
 
 ```
-python3 CIBERSORTx_fractions.py --input INPUT --username USERNAME --token TOKEN --refsample GEP.txt
+python3 CIBERSORTx_fractions.py --input GEP.txt --username USERNAME --token TOKEN
 ```
 
 Note: To obtain `USERNAME` and `TOKEN`, register and request for access to CIBERSORTx Docker on [CIBERSORTx](https://cibersortx.stanford.edu) website.
