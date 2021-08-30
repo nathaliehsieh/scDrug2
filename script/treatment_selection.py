@@ -148,7 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--metadata", default='./GSE70138_Broad_LINCS_inst_info_2017-03-06.txt', help="the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'")
     
     args = parser.parse_args()
-    cell_types = ['A375','A549','HCC515', 'HEPG2','HT29','MCF7','PC3','YAPC']
+    cell_types = ['A375','A549','HCC515','HEPG2','HT29','MCF7','PC3','YAPC']
     
     # check arguments
     if not os.path.isfile(args.input):
@@ -200,8 +200,6 @@ if __name__ == '__main__':
         df_ctrl_composition = df_comp.loc[ctrl_inst_ids,df_comp.columns[:n_clusters]]
         ctrl_composition = df_ctrl_composition.mean()
         ctrl_composition = ctrl_composition/np.sum(ctrl_composition.values)
-
-        #print('after dropping control vehicle: ',df_result.shape)
         
         # fill the result dataframe
         for perturbation in df_result.index:
@@ -271,21 +269,26 @@ if __name__ == '__main__':
     fh.close()
 
 
-    print('--------Subpopulation Analysis--------\n')
+    print('\n--------Subpopulation Analysis--------')
     # subpopulation analysis
     df_effect = cal_effect_consistency(df_effect)
     grouped = df_effect.groupby('kill_all_count')
     
     for name, group in grouped:
-        print('{} perturbations (e.g., {}) can kill {} clusters.'.format(group.shape[0], group.index[0], name))
+        print('{} perturbations (e.g., {}) can kill {} cluster(s).'.format(group.shape[0], group.index[0], name))
     
-    print('\n')
     # subpopulation analysis
-    for cluster in df_effect.columns[:-1]:
+    resistant_clusters = []
+    for cluster in sorted(df_effect.columns[:-1], key=int):
         pert = df_effect[df_effect[cluster] <= threshold].index.to_list()
-        print('{} can be killed by {} perturbations.'.format(cluster, len(pert)))
-        print('    peturbation with best efficacy: {} -> {:.2f}'.format(df_effect[cluster].idxmin(), df_effect[cluster].min()))
-
+        if (len(pert) > 0):
+            print('Cluster {} can be killed by {} perturbations.'.format(cluster, len(pert)))
+            print('    peturbation with best efficacy: {} -> {:.2f}'.format(df_effect[cluster].idxmin(), df_effect[cluster].min()))
+        else:
+            resistant_clusters.append(cluster)
+    if(len(resistant_clusters)>0):
+        print('\nClusters cannot be killed: ', sorted(resistant_clusters, key=int))
+        print('\n')
     
 
     print('--------Treatment Selection--------')
@@ -301,6 +304,7 @@ if __name__ == '__main__':
     with open('{}/{}_solution_list_t{}_cont{}.csv'.format(args.outdir, outputname, threshold, con_threshold),"w+") as f:
         writer = csv.writer(f)
         writer.writerows(list_result)
+
 
     print('Done! Cocktail therapy is stored in {}/{}_solution_list_t{}_cont{}.csv'.format(args.outdir, outputname, threshold, con_threshold))
 
