@@ -199,10 +199,9 @@ if args.auto_resolution:
     subset = 0.8
     sample_n = len(adata.obs)
     subsample_n = int(sample_n * subset)
-    resolutions = np.arange(0.5, 1.6, 0.1)
+    resolutions = np.linspace(0.5, 1.5, 11)
     silhouette_avg = np.zeros(len(resolutions), dtype=float)
     for ri, r in enumerate(resolutions):
-        r = np.round(r)
         print("Clustering test: resolution = ", r)
         subsamples = [np.random.choice(sample_n, subsample_n, replace=False) for t in range(rep_n)]
         p = mp.Pool(args.cpus)
@@ -225,7 +224,7 @@ if args.auto_resolution:
     
     best_resution = resolutions[np.argmax(silhouette_avg)]
     adata.obs['louvain'] = adata.obs['louvain_r' + str(best_resution)]
-    res = np.round(best_resution, 1)
+    res = best_resution
     print("resolution with highest score: ", res)
     
 else:
