@@ -24,10 +24,14 @@ def draw_heatmap(df, drugs):
             for j in subdf.columns:
                 if(subdf.loc[i,j] > 0): subdf.loc[i,j] = 0
         sns.set(rc={'figure.figsize':(12,3)})
-        ax = sns.heatmap(subdf, center=0, cmap='RdBu', vmin=-1, vmax=0, linewidths=0.5, linecolor='lightgrey', cbar=True)
+        ax = sns.heatmap(subdf, center=0, cmap='RdBu', vmin=-1, vmax=0, \
+                linewidths=0.5, linecolor='lightgrey', cbar=True)
         for _, spine in ax.spines.items():
             spine.set_visible(True)
             spine.set_color('lightgrey')
+        c_bar = ax.collections[0].colorbar
+        c_bar.set_ticks([threshold, conthreshold, 0])
+        c_bar.set_ticklabels([str(threshold), str(conthreshold), '\u2265 0'])
         plt.savefig('selected_drug_heatmap.png',bbox_inches='tight')
         print('Heatmap : selected_drug_heatmap.png')
 
