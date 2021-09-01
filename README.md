@@ -47,6 +47,8 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 ## Usage
 
+Note: Refer to [example](example) for a detail illustration of the usage for The Single-Cell Analysis Pipeline.
+
 ### Single-Cell Data Analysis
 
 **Single-Cell Data Analysis** took the scRNA-seq data in a 10x-Genomics-formatted mtx directory or a CSV file as input, performed fundamental data analysis, and output a Scanpy Anndata object `scanpyobj.h5ad`, a UMAP `umap_cluster.png` and differentially expressed genes (DEGs) `cluster_DEGs.csv` of the clustering result, and a gene expression profile (GEP) file `GEP.txt`.
