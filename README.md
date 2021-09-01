@@ -130,7 +130,7 @@ python3 drug_response_prediction.py --input scanpyobj.h5ad
 
 ### Treatment Selection
 
-In **Treatment Selection**, we first **imputed cell fractions** of bulk GEPs from the LINCS L1000 database with single-cell GEP `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerated the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **selected treatment combinations** from the LINCS L1000 database with the CIBERSORTx result.
+In **Treatment Selection**, we first **imputed cell fractions** of bulk GEPs from the LINCS L1000 database with single-cell GEP `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerated the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **selected treatment combinations** from the LINCS L1000 database with the CIBERSORTx result, and generated  plots and a dataframe to show the drug effect.
 
 #### Impute Cell Fractions
 
@@ -169,7 +169,7 @@ Note: To obtain `USERNAME` and `TOKEN`, register and request for access to CIBER
 
 #### Select Treatment Combinations
 
-**Select Treatment Combinations** took the CIBERSORTx result `CIBERSORTx_Adjusted.txt` and the L1000 instance info file as input, selects treatment combinations for given cell type from the LINCS L1000 database, and outputs the treatment combinations list `CIBERSORTx_Results_solution_list_*.csv`.
+**Select Treatment Combinations** took the CIBERSORTx result `CIBERSORTx_Adjusted.txt` and the L1000 instance info file as input, selected treatment combinations for given cell type from the LINCS L1000 database, and output the treatment combinations list `CIBERSORTx_Results_solution_list_*.csv`. For visualization, we provided consistency plots `treatment_effect.pdf`, a dataframe `treatment_effect.csv`, and a heatmap `selected_drug_heatmap.png` of given drugs to demonstrate the drug effect.
 
 - Run `python3 treatment_selection.py -h` to show the help messages as follow for **Select Treatment Combinations**.
 
@@ -192,8 +192,35 @@ optional arguments:
   --metadata METADATA   the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'
 ```
 
+- Run `python draw_effect.py -h` to show the help messages as follow for treatment effect visualization.
+
+```
+usage: draw_effect.py [-h] -i INPUT [-o OUTPUT] [--threshold THRESHOLD] [--conthreshold CONTHRESHOLD] [--names NAMES]
+
+Generate drug effect plots and dataframe (.csv)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        the directory where the files generated after running treatment_selection.py are stored, including 'df_effect.pickle', 
+                        'DICT_DRUG_PRE.pickle' and the solution table ('*_solution_list_t*_cont*.csv').
+  -o OUTPUT, --output OUTPUT
+                        path to output directory, default='./'
+  --threshold THRESHOLD
+                        threshold of cell survival rate used for treatment selection; If not provided, the value wll be set based on the name of the table file.
+  --conthreshold CONTHRESHOLD
+                        consistency threshold used for treatment selection; If not provided, the value wll be set based on the name of the table file.
+  --drugs DRUGS         comma-delimited names of drugs for heatmap visualization. Example: palbociclib,NVP-BEZ235,selumetinib
+```
+
 - **Select Treatment Combinations** with the L1000 metadata.
 
 ```
 python3 treatment_selection.py --input CIBERSORTx_Adjusted.txt --celltype CELLTYPE --metadata METADATA
+```
+
+- Illustrate the consistency plots, the dataframe, and the heatmap of given drugs for the treatment effect.
+
+```
+python3 draw_effect.py --input INPUT --drugs DRUGS
 ```
