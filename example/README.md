@@ -8,12 +8,15 @@ mkdir write
 
 ```
 mkdir write/clustering
-python3 ../script/single_cell_analysis.py --input data/10x_mtx --output write/clustering --metadata data/metadata.csv --batch PatientID --resolution 0.6 --annotation --gsea --GEP False
+python3 ../script/single_cell_analysis.py --input data/10x_mtx --output write/clustering \
+--metadata data/metadata.csv --batch PatientID --resolution 0.6 \
+--annotation --gsea --GEP False
 ```
 
 ```
 mkdir write/subclustering
-python3 ../script/single_cell_analysis.py --input write/clustering/scanpyobj.h5ad --format h5ad --output write/subclustering --clusters '1,5,9' --batch PatientID --resolution 0.8
+python3 ../script/single_cell_analysis.py --input write/clustering/scanpyobj.h5ad --output write/subclustering \
+--format h5ad  --clusters '1,5,9' --batch PatientID --resolution 0.8
 ```
 
 ```
@@ -23,12 +26,14 @@ python3 drug_response_prediction.py --input write/subclustering/scanpyobj.h5ad -
 
 ```
 mkdir write/CIBERSORTx_fractions
-python3 CIBERSORTx_fractions.py --input write/subclustering/GEP.txt --output write/CIBERSORTx_fractions --username cyhsieh.cs07g@nctu.edu.tw --token 32583d7c6715ada82988f615a1528656 --celltype HEPG2
+python3 CIBERSORTx_fractions.py --input write/subclustering/GEP.txt --output write/CIBERSORTx_fractions \
+--username USERNAME --token TOKEN --celltype HEPG2
 ```
 
 ```
 mkdir write/treatment_selection
-python3 treatment_selection.py --input data/CIBERSORTx_Results.txt --output write/treatment_selection --celltype HEPG2 --metadata data/GSE70138_Broad_LINCS_inst_info_2017-03-06.txt
+python3 treatment_selection.py --input data/CIBERSORTx_Results.txt --output write/treatment_selection \
+--celltype HEPG2 --metadata data/GSE70138_Broad_LINCS_inst_info_2017-03-06.txt
 ```
 
 ```
