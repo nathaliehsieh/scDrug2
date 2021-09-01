@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from treatment_selection import Drug
 
-#plt.style.use('classic')
-#
+# plt.style.use('classic')
+
 global threshold, con_threshold, pp
 
 def draw_heatmap(df, drugs):
@@ -32,10 +32,9 @@ def draw_heatmap(df, drugs):
         c_bar = ax.collections[0].colorbar
         c_bar.set_ticks([threshold, conthreshold, 0])
         c_bar.set_ticklabels([str(threshold), str(conthreshold), '\u2265 0'])
-        plt.savefig(os.path.join(args.output, 'selected_drug_heatmap.png'),bbox_inches='tight')
-        print('Heatmap : selected_drug_heatmap.png')
-
-
+        heatmapname = os.path.join(args.output, 'selected_drug_heatmap.png')
+        plt.savefig(heatmapname, bbox_inches='tight')
+        print('Heatmap is stored in \'{}\'.'.format(heatmapname))
 
 def draw_consistency_plot(index_list, df_effect, df_all):
     index_list = [x for x in index_list if x in df_effect.index]
@@ -62,7 +61,7 @@ parser.add_argument('-i', '--input', required=True, help='the directory where th
 parser.add_argument("-o", "--output", default='./', help="path to output directory, default='./'")
 parser.add_argument('--threshold', default=None, help='threshold of cell survival rate used for treatment selection; If not provided, the value wll be set based on the name of the table file.')
 parser.add_argument('--conthreshold', default=None, help='consistency threshold used for treatment selection; If not provided, the value wll be set based on the name of the table file.')
-parser.add_argument('--names', default=None, help='comma-delimited names of drugs for heatmap visualization. Example: palbociclib,NVP-BEZ235,selumetinib')
+parser.add_argument('--drugs', default=None, help='comma-delimited names of drugs for heatmap visualization. Example: palbociclib,NVP-BEZ235,selumetinib')
 
 args = parser.parse_args()
 
@@ -124,7 +123,7 @@ df_all.to_csv(csvname, index=True)
 print('Figures are stored in \'{}\'.'.format(pdfname))
 print('Values are stored in \'{}\'.'.format(csvname))
 
-if args.names:
-    draw_heatmap(df_all, args.names.split(','))
+if args.drugs:
+    draw_heatmap(df_all, [x.strip() for x in args.drugs.split(',')])
 
 
