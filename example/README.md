@@ -2,7 +2,7 @@
 
 ```
 cd example
-unzip data.zip
+gunzip data/10x_mtx/* data/metadata.csv.gz
 mkdir write
 ```
 
