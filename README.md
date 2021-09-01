@@ -8,7 +8,7 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 - **Drug Response Prediction** estimated the half maximal inhibitory concentration (IC50) of cell clusters, and reported the cell death percentages as drug kill efficacy.
 
-- **Treatment Selection** lists treatment combinations of given cell clusters.
+- **Treatment Selection** listed treatment combinations of given cell clusters.
 
 
 ## Download and Installation
