@@ -1,11 +1,22 @@
 ## Example Usage for The Single-Cell Analysis Pipeline
 
+### Preprocessing
+
+The example data is composed of a random 10% subdata from [GSE156625: Onco-fetal reprogramming of endothelial cells drives immunosuppressive macrophages in Hepatocellular Carcinoma (scRNA-seq)](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE156625).
+
+Before going through the steps in The Single-Cell Analysis Pipeline, run the following commands to unzip the data files and create the output directory `write` under the `example` folder. 
+
 ```
 cd example
 unzip data/10x_mtx.zip
 unzip data/metadata.csv.zip
 mkdir write
 ```
+
+
+### Single-Cell Data Analysis
+
+- First, we execute **Single-Cell Data Analysis** on the 10x-Genomics-formatted mtx directory `data/10x_mtx`, with batch correction of `PatientID` in the metadata `data/metadata.csv`, and clustering at resolution 0.6. Additionally, we assign arguments `--annotation` and `gsea` to perform cell type annotation and Gene Set Enrichment Analysis (GSEA).
 
 ```
 mkdir write/clustering
@@ -15,6 +26,10 @@ python3 ../script/single_cell_analysis.py --input data/10x_mtx --output write/cl
 --annotation --gsea --GEP False
 ```
 
+Note: This step may take a few minutes.
+
+- Inspecting the preceding output stored in `write/clustering/scanpyobj.h5ad`, we regard the clusters with tumor cell percentages over twice the normal cell percentages, which consist of clusters 1, 5 and 9, as the tumor clusters. Then, we apply **Single-Cell Data Analysis** once again to carry out sub-clustering on the tumor clusters at resolution 0.8 with batch correction.
+
 ```
 mkdir write/subclustering
 
@@ -22,11 +37,27 @@ python3 ../script/single_cell_analysis.py --input write/clustering/scanpyobj.h5a
 --format h5ad  --clusters '1,5,9' --batch PatientID --resolution 0.8
 ```
 
+### Drug Response Prediction
+
+- Based on the sub-clustering result `write/subclustering/scanpyobj.h5ad`, we run **Drug Response Prediction** to predict clusterwise IC50 and cell death percentages to drugs in GDSC database.
+
 ```
 mkdir write/drug_response_prediction
 
 python3 ../script/drug_response_prediction.py --input write/subclustering/scanpyobj.h5ad --output write/drug_response_prediction
 ```
+
+
+### Treatment Selection
+
+In **Treatment Selection**, we first **impute cell fractions** of bulk GEPs from the LINCS L1000 database with single-cell GEP `write/subclustering/GEP.txt`. Then, we **selecte treatment combinations** from the LINCS L1000 database with the CIBERSORTx result, and visualize the result treatment effect.
+
+
+#### Impute Cell Fractions
+
+- Since it takes several hours to **impute cell fractions**, the result of CIBERSORTx/fractions, `data/CIBERSORTx_Adjusted.txt` and the L1000 instance info file `data/GSE70138_Broad_LINCS_inst_info_2017-03-06.txt`, is provided for the next step.
+
+Note: With `USERNAME` and `TOKEN` acquired from [CIBERSORTx](https://cibersortx.stanford.edu), we could also run the following commands to **impute cell fractions** on previously generated `write/subclustering/GEP.txt` with celltype HEPG2 assigned.
 
 ```
 mkdir write/CIBERSORTx_fractions
@@ -35,12 +66,20 @@ python3 ../script/CIBERSORTx_fractions.py --input write/subclustering/GEP.txt --
 --username USERNAME --token TOKEN --celltype HEPG2
 ```
 
+Note: This step could take several hours if running the script.
+
+#### Select Treatment Combinations
+
+- With the CIBERSORTx/fractions result `data/CIBERSORTx_Adjusted.txt` and the L1000 instance info file `data/GSE70138_Broad_LINCS_inst_info_2017-03-06.txt` as input, we **select treatment combinations** from the LINCS L1000 database with celltype HEPG2 assigned.
+
 ```
 mkdir write/treatment_selection
 
 python3 ../script/treatment_selection.py --input data/CIBERSORTx_Results.txt --output write/treatment_selection \
 --celltype HEPG2 --metadata data/GSE70138_Broad_LINCS_inst_info_2017-03-06.txt
 ```
+
+- To visualize the result treatment effect, we illustrate consistency plots, and the heatmap of palbociclib, NVP-BEZ235, and selumetinib.
 
 ```
 mkdir write/draw_effect
