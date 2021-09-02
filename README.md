@@ -104,7 +104,7 @@ python3 single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH --auto-reso
 
 ### Drug Response Prediction
 
-**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported clusterwise IC50 and cell death percentages to drugs in GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and output the prediction results `IC50_prediction.csv` and `drug_kill_prediction.csv`.
+**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported clusterwise IC50 and cell death percentages to drugs in the GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and output the prediction results `IC50_prediction.csv` and `drug_kill_prediction.csv`.
 
 - Run `python3 drug_response_prediction.py -h` to show the help messages as follow for **Drug Response Prediction**.
 
