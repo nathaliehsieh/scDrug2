@@ -132,7 +132,7 @@ python3 drug_response_prediction.py --input scanpyobj.h5ad
 
 ### Treatment Selection
 
-In **Treatment Selection**, we first **imputed cell fractions** of bulk GEPs from the LINCS L1000 database with single-cell GEP `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerated the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **selected treatment combinations** from the LINCS L1000 database with the CIBERSORTx result, and generated  plots and a dataframe to show the drug effect.
+In **Treatment Selection**, we first **imputed cell fractions** of bulk GEPs from the LINCS L1000 database with single-cell GEP `GEP.txt` created in **Single-Cell Data Analysis** via Docker version of [CIBERSORTx Cell Fractions](https://cibersortx.stanford.edu), which enumerated the proportions of distinct cell subpopulations in tissue expression profiles. Then, we **selected treatment combinations** from the LINCS L1000 database with the CIBERSORTx result, and generated plots and a dataframe to show the drug effect.
 
 #### Impute Cell Fractions
 
