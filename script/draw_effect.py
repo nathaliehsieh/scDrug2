@@ -23,7 +23,7 @@ def draw_heatmap(df, drugs):
         for i in subdf.index:
             for j in subdf.columns:
                 if(subdf.loc[i,j] > 0): subdf.loc[i,j] = 0
-        sns.set(rc={'figure.figsize':(12,3)})
+        sns.set(rc={'figure.figsize':(12, int(len(selected_index))/2)})
         ax = sns.heatmap(subdf, center=0, cmap='RdBu', vmin=-1, vmax=0, \
                 linewidths=0.5, linecolor='lightgrey', cbar=True)
         for _, spine in ax.spines.items():
