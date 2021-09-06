@@ -25,7 +25,7 @@ def draw_heatmap(df, drugs):
                 if(subdf.loc[i,j] > 0): subdf.loc[i,j] = 0
         sns.set(rc={'figure.figsize':(12, int(len(selected_index))/2)})
         ax = sns.heatmap(subdf, center=0, cmap='RdBu', vmin=-1, vmax=0, \
-                linewidths=0.5, linecolor='lightgrey', cbar=True)
+                linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'label': 'cell survival rate'})
         for _, spine in ax.spines.items():
             spine.set_visible(True)
             spine.set_color('lightgrey')
