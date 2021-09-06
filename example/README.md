@@ -1,10 +1,10 @@
-## Example Usage for The Single-Cell Analysis Pipeline
+## Example Usage for The scDrug
 
 ### Preprocessing
 
 The example data is composed of a random 10% subdata from [GSE156625: Onco-fetal reprogramming of endothelial cells drives immunosuppressive macrophages in Hepatocellular Carcinoma (scRNA-seq)](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE156625).
 
-Before going through the steps in The Single-Cell Analysis Pipeline, run the following commands to unzip the data files and create the output directory `write` under the `example` folder. 
+Before going through the steps in the scDrug, run the following commands to unzip the data files and create the output directory `write` under the `example` folder. 
 
 ```
 cd example
