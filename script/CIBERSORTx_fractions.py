@@ -13,7 +13,7 @@ parser.add_argument("--celltype", default=None, help="choose a cell line from th
 
 args = parser.parse_args()
 
-data_path = '/single-cell-analysis/data/'
+data_path = '/scDrug/data/'
 
 function = "docker run --rm --name cibersortx-fractions \
           -v {input_dir}:/src/data -v {output_dir}:/src/outdir \

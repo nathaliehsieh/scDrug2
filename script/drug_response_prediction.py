@@ -40,7 +40,7 @@ drug_info_df.index = drug_info_df.index.astype(str)
 
 ### IC50 prediction
 ## Read pre-trained model
-model_dir = '/single-cell-analysis/CaDRReS-Sc-model/'
+model_dir = '/scDrug/CaDRReS-Sc-model/'
 obj_function = widgets.Dropdown(options=['cadrres-wo-sample-bias', 'cadrres-wo-sample-bias-weight'], description='Objetice function')
 model_spec_name = obj_function.value
 model_file = model_dir + '{}_param_dict_all_genes.pickle'.format(model_spec_name)

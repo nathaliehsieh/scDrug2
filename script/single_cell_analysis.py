@@ -199,9 +199,11 @@ if args.auto_resolution:
     subset = 0.8
     sample_n = len(adata.obs)
     subsample_n = int(sample_n * subset)
-    resolutions = np.linspace(0.5, 1.5, 11)
+    resolutions = np.linspace(0.6, 1.4, 5)
     silhouette_avg = np.zeros(len(resolutions), dtype=float)
+    np.random.seed(1)
     for ri, r in enumerate(resolutions):
+        r = np.round(r, 1)
         print("Clustering test: resolution = ", r)
         subsamples = [np.random.choice(sample_n, subsample_n, replace=False) for t in range(rep_n)]
         p = mp.Pool(args.cpus)
