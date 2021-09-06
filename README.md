@@ -1,8 +1,8 @@
-# Single-Cell Analysis Pipeline
+# scDrug: From scRNA-seq to Drug Discovery
 
-The Single-Cell Analysis Pipeline constructed a workflow for comprehensive analysis on single-cell RNA sequencing (scRNA-seq) data. It provided a powerful tool with various functions, from fundamental data analysis to drug response prediction, and treatment suggestions.
+The scDrug constructed a workflow for comprehensive analysis on single-cell RNA sequencing (scRNA-seq) data. It provided a powerful tool with various functions, from fundamental data analysis to drug response prediction, and treatment suggestions.
 
-The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data investigation: **Single-Cell Data Analysis**, **Drug Response Prediction**, and **Treatment Selection**.
+The scDrug went through three parts on raw scRNA-seq data investigation: **Single-Cell Data Analysis**, **Drug Response Prediction**, and **Treatment Selection**.
 
 - **Single-Cell Data Analysis** performed data preprocessing, clustering, cell type annotation and Gene Set Enrichment Analysis (GSEA). 
 
@@ -13,29 +13,29 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 ## Download and Installation
 
-1.  Clone the repository to local directory, ex: `./single-cell-analysis`.
+1.  Clone the repository to local directory, ex: `./scDrug`.
 
     ```
-    git clone https://github.com/b06902075/single-cell-analysis.git ./single-cell-analysis
-    ```
-
-
-2.  Build the Docker image tagged `single-cell-analysis`.
-
-    ```
-    docker build -t single-cell-analysis ./single-cell-analysis
+    git clone https://github.com/b06902075/scDrug.git ./scDrug
     ```
 
 
-3.  Run the Docker container named `single-cell-analysis` with `/docker/path` mounted to `/server/path` to access files within the Docker container.
+2.  Build the Docker image tagged `scDrug`.
+
+    ```
+    docker build -t scDrug ./scDrug
+    ```
+
+
+3.  Run the Docker container named `scDrug` with `/docker/path` mounted to `/server/path` to access files within the Docker container.
     
     ```
-    docker run -it --name single-cell-analysis -v /server/path:/docker/path --privileged IMAGE_ID
+    docker run -it --name scDrug -v /server/path:/docker/path --privileged IMAGE_ID
     ```
     
     Note: Get `IMAGE_ID` with command `docker images`.
     
-4.  In the Docker container `single-cell-analysis`, pull the Docker image `cibersortx/fractions` used in treatment selection.
+4.  In the Docker container `scDrug`, pull the Docker image `cibersortx/fractions` used in treatment selection.
 
     ```
     /etc/init.d/docker start
@@ -47,7 +47,7 @@ The Single-Cell Analysis Pipeline went through three parts on raw scRNA-seq data
 
 ## Usage
 
-Note: Refer to [example](example) for a detail illustration of the usage for The Single-Cell Analysis Pipeline.
+Note: Refer to [example](example) for a detail illustration of the usage for the scDrug.
 
 ### Single-Cell Data Analysis
 
