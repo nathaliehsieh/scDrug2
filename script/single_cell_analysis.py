@@ -115,7 +115,10 @@ results_file = os.path.join(args.output, 'scanpyobj.h5ad')
 if args.format == 'h5ad':
     adata = sc.read(args.input)
     clusters = [x.strip() for x in args.clusters.split(',')]
-    adata = adata.raw.to_adata()[adata.obs['louvain'].isin(clusters)]
+    adata = adata[adata.obs['louvain'].isin(clusters)]
+    if args.GEP:
+        adata_GEP = adata.raw.to_adata()
+
 else:
     if args.format == 'csv':
         adata = sc.read_csv(args.input)
@@ -131,41 +134,34 @@ else:
     
     adata = adata[adata.obs.pct_counts_mt < 30, :]
 
-# GEP preperation
-if args.GEP:
-    adata_GEP = adata.copy()
-    sc.pp.normalize_total(adata_GEP, target_sum=1e6)
-    mat = adata_GEP.X.transpose()
-    if type(mat) is not np.ndarray:
-        mat = mat.toarray()
-    GEP_df = pd.DataFrame(mat, index=adata_GEP.var.index)
+    if args.GEP:
+        adata_GEP = adata.copy()
 
-if not args.format == 'h5ad':
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
-
-sc.pp.highly_variable_genes(adata)
-adata.raw = adata
-adata = adata[:, adata.var.highly_variable]
-sc.pp.regress_out(adata, ['total_counts', 'pct_counts_mt'])
-
-sc.pp.scale(adata)
-
-
-## Principal component analysis
-sc.tl.pca(adata, svd_solver='arpack')
-
-# adata.write(results_file)
+    
+    sc.pp.highly_variable_genes(adata)
+    adata.raw = adata
+    adata = adata[:, adata.var.highly_variable]
+    sc.pp.regress_out(adata, ['total_counts', 'pct_counts_mt'])
+    
+    sc.pp.scale(adata)
 
 
-## Batch Correction with Harmony
-if not args.batch is None:
-    if not args.metadata is None:
-        adata.obs[args.batch] = metadata_df.loc[adata.obs.index][args.batch]
-    elif args.format == 'h5ad' and not args.batch in adata.obs.columns:
-        sys.exit("The batch column is not in the Anndata object.")
-    print('Batch correction...')
-    sc.external.pp.harmony_integrate(adata, args.batch, adjusted_basis='X_pca')
+    ## Principal component analysis
+    sc.tl.pca(adata, svd_solver='arpack')
+    
+    # adata.write(results_file)
+    
+    
+    ## Batch Correction with Harmony
+    if not args.batch is None:
+        if not args.metadata is None:
+            adata.obs[args.batch] = metadata_df.loc[adata.obs.index][args.batch]
+        elif args.format == 'h5ad' and not args.batch in adata.obs.columns:
+            sys.exit("The batch column is not in the Anndata object.")
+        print('Batch correction...')
+        sc.external.pp.harmony_integrate(adata, args.batch, adjusted_basis='X_pca')
 
 
 ## Clustering
@@ -199,7 +195,7 @@ if args.auto_resolution:
     subset = 0.8
     sample_n = len(adata.obs)
     subsample_n = int(sample_n * subset)
-    resolutions = np.linspace(0.6, 1.4, 5)
+    resolutions = np.linspace(0.4, 1.4, 6)
     silhouette_avg = np.zeros(len(resolutions), dtype=float)
     np.random.seed(1)
     for ri, r in enumerate(resolutions):
@@ -272,6 +268,11 @@ if args.annotation:
 # GEP format
 if args.GEP:
     print('Exporting GEP...')
+    sc.pp.normalize_total(adata_GEP, target_sum=1e6)
+    mat = adata_GEP.X.transpose()
+    if type(mat) is not np.ndarray:
+        mat = mat.toarray()
+    GEP_df = pd.DataFrame(mat, index=adata_GEP.var.index)
     GEP_df.columns = adata.obs['louvain'].tolist()
     # GEP_df = GEP_df.loc[adata.var.index[adata.var.highly_variable==True]]
     GEP_df.dropna(axis=1, inplace=True)
