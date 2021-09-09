@@ -28,13 +28,15 @@ python3 ../script/single_cell_analysis.py --input data/10x_mtx --output write/cl
 --annotation --gsea --GEP False
 ```
 
-- Inspecting the preceding output stored in `write/clustering/scanpyobj.h5ad`, we regard the clusters with tumor cell percentages over twice the normal cell percentages, which consist of clusters 1, 5 and 9, as the tumor clusters. Then, we apply **Single-Cell Data Analysis** once again to carry out sub-clustering on the tumor clusters at resolution 0.8 with batch correction.
+- Inspecting the preceding output stored in `write/clustering/scanpyobj.h5ad`, we regard the clusters with tumor cell percentages over twice the normal cell percentages, which consist of clusters 1, 5 and 9, as the tumor clusters. Then, we apply **Single-Cell Data Analysis** once again to carry out sub-clustering on the tumor clusters at automatically determined resolution.
+
+Note: To accelerate the process of automatically determined resolution, increase the number of CPU with arguments `--cpus CPUS`.
 
 ```
 mkdir write/subclustering
 
 python3 ../script/single_cell_analysis.py --input write/clustering/scanpyobj.h5ad --output write/subclustering \
---format h5ad  --clusters '1,5,9' --batch PatientID --resolution 0.8
+--format h5ad  --clusters '1,5,9' --auto-resolution --cpus 4
 ```
 
 ### Drug Response Prediction
