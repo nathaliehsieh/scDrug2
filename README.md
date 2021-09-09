@@ -95,10 +95,10 @@ optional arguments:
 python3 single_cell_analysis.py --input INPUT --metadata METADATA --batch BATCH --resolution 1.0 --annotation --gsea
 ```
 
-- **Single-Cell Data Analysis** for sub-clustering with batch correction and automatically determined clustering resolution run under 2 cpus.
+- **Single-Cell Data Analysis** for sub-clustering on specified clusters at automatically determined resolution run under 4 cpus.
 
 ```
-python3 single_cell_analysis.py --input scanpyobj.h5ad --batch BATCH --auto-resolution --cpus 2
+python3 single_cell_analysis.py --input scanpyobj.h5ad --clusters CLUSTERS --auto-resolution --cpus 4
 ```
 
 
