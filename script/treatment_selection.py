@@ -12,6 +12,7 @@ pd.options.mode.chained_assignment = None
 
 global threshold
 global con_threshold
+global max_n_drug
 
 class Drug:
     
@@ -100,33 +101,26 @@ def select_candidate_drugs(df, _max):
     if(_max <= 0): return []
     #print('\n1st step: kill same amount clusters ( %d clusters) : ' %  _max)
     same_ability_drugs = df[df['kill_all_count'].values == _max].index.to_list()
-    #choose the one with minimum dose
-    #min_dose_drugs = choose_least_dose(same_ability_drugs)
-    return same_ability_drugs
+    # choose the one with minimum dose
+    # min_dose_drugs = choose_least_dose(same_ability_drugs)
+
+    # Only the one with min concentration will be kept in candidates among the drugs with same name
+    same_ability_drugs = sorted(same_ability_drugs, reverse=True, key=lambda d: (d.split('_',2)[0], float(d.split('_',2)[1])))
+    dict_filtered_drugs = {}
+    for d in same_ability_drugs:
+        if not (name:=d.split('_',2)[0]) in dict_filtered_drugs.keys():
+            dict_filtered_drugs[name] = d
+    return list(dict_filtered_drugs.values())
 
 
 def find_drug(df, solution=[], LIST_SOLUTION=[]):
     # All cell types were killed
-    if (len(df.columns) == 1) :
+    if len(df.columns) == 1 or df.min().min() > threshold :
         LIST_SOLUTION.append(sorted(solution))
-    # If no perturbation could induce complete apoptosis of any subpopulation
-    elif (df.min().min() > threshold):
-        i_col = 0
-        while (df[df.columns[i_col]].min() > -0.5 and df.columns[i_col] != df.columns[-1]):
-            #print('\nNo candidates for %s' % df.columns[i_col])
-            i_col += 1
-        col = df.columns[i_col]
-        if(col != df.columns[-1]):
-            candidates = [x for x in df.index if df.loc[x,col] == df[col].min()]
-            for drug in candidates:
-                solution.append(drug)
-                df_tmp = update_df_effect(df, df.columns[:i_col+1])
-                find_drug(df_tmp, solution, LIST_SOLUTION)
-                solution.pop()
-        df = update_df_effect(df, df.columns[:-1])
-        find_drug(df, solution, LIST_SOLUTION)
     else :
         candidates = select_candidate_drugs(df, df['kill_all_count'].values.max())
+        # sort candidates by its concentration
+        candidates = sorted(candidates, reverse=False, key=lambda d: float(d.split('_',2)[1]))[:min(max_n_drug, len(candidates))]
         for drug in candidates:
             solution.append(drug)
             killed_clusters = [x for x in df.columns if df.loc[drug,x] <= threshold]
@@ -146,7 +140,8 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--con_threshold", default=-0.75, type=float, help="Consistency threshold. Range: [-1,0), default:-0.75")
     parser.add_argument("--celltype", required=True, type=str, help="Same as the cell type for decomposition. Options: A375 | A549 | HEPG2 | HT29 | MCF7 | PC3 | YAPC")
     parser.add_argument("--metadata", default='./GSE70138_Broad_LINCS_inst_info_2017-03-06.txt', help="the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'")
-    
+    parser.add_argument("--max", default=5, type=int, help="Maximum number of compounds selected for 1 cluster. Outputing all the possible compounds may be time-consuming.")
+
     args = parser.parse_args()
     cell_types = ['A375','A549','HCC515','HEPG2','HT29','MCF7','PC3','YAPC']
     
@@ -163,12 +158,15 @@ if __name__ == '__main__':
         sys.exit("The provided cell type does not exist in the LINCS L1000 database.")
     if not os.path.isfile(args.metadata):
         sys.exit("The metadata file for LINCS L1000 does not exist.")
+    if args.max < 1:
+        sys.exit("Invalid input for MAX.")
 
 
     print('--------Preprocessing--------')
 
     threshold = args.threshold
     con_threshold = args.con_threshold
+    max_n_drug = args.max
     print('sensitivity threshold: {}, consistency threshold: {} '.format(threshold, con_threshold))
     
     # read metadata
