@@ -136,11 +136,11 @@ if __name__ == '__main__':
 
     parser.add_argument("-i", "--input", required=True, help="CIBERSORTx output file.")
     parser.add_argument("-o", "--outdir", default='./', help="path to output directory, default='./'")
-    parser.add_argument("-t", "--threshold", default=-0.9, type=float, help="Sensitivity threshold. Range: [-1,0), default:-0.9")
-    parser.add_argument("-c", "--con_threshold", default=-0.75, type=float, help="Consistency threshold. Range: [-1,0), default:-0.75")
+    parser.add_argument("-t", "--threshold", default=-0.9, type=float, help="Sensitivity threshold. Range: [-1,0), default=-0.9")
+    parser.add_argument("-c", "--con_threshold", default=-0.75, type=float, help="Consistency threshold. Range: [-1,0), default=-0.75")
     parser.add_argument("--celltype", required=True, type=str, help="Same as the cell type for decomposition. Options: A375 | A549 | HEPG2 | HT29 | MCF7 | PC3 | YAPC")
     parser.add_argument("--metadata", default='./GSE70138_Broad_LINCS_inst_info_2017-03-06.txt', help="the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'")
-    parser.add_argument("--max", default=5, type=int, help="Maximum number of compounds selected for 1 cluster. Outputing all the possible compounds may be time-consuming.")
+    parser.add_argument("--max", default=5, type=int, help="Maximum number of compounds selected for 1 cluster, default=5. Outputing all the possible compounds may be time-consuming.")
 
     args = parser.parse_args()
     cell_types = ['A375','A549','HCC515','HEPG2','HT29','MCF7','PC3','YAPC']
