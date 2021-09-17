@@ -14,8 +14,8 @@ import scanpy as sc
 parser = argparse.ArgumentParser(description='Drug response prediction')
 
 parser.add_argument('-i', '--input', required=True, help='path to input Anndata object (h5ad file)')
-parser.add_argument('-o', '--output', default='./', help='path to output directory, default='./'')
-parser.add_argument('-c', '--clusters', default='All', type=str, help='perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'')
+parser.add_argument('-o', '--output', default='./', help='path to output directory, default=\'./\'')
+parser.add_argument('-c', '--clusters', default='All', type=str, help='perform IC50 prediction on specified clusters, e.g. \'1,3,8,9\', default=\'All\'')
 
 args = parser.parse_args()
 
