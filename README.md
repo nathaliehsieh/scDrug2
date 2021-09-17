@@ -20,10 +20,10 @@ The scDrug went through three parts on raw scRNA-seq data investigation: **Singl
     ```
 
 
-2.  Build the Docker image tagged `scDrug`.
+2.  Build the Docker image tagged `sc-drug`.
 
     ```
-    docker build -t scDrug ./scDrug
+    docker build -t sc-drug ./scDrug
     ```
 
 
