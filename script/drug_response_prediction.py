@@ -11,23 +11,23 @@ import scanpy as sc
 
 ## Parse command-line arguments
 # process arguments
-parser = argparse.ArgumentParser(description="Drug response prediction")
+parser = argparse.ArgumentParser(description='Drug response prediction')
 
-parser.add_argument("-i", "--input", required=True, help="path to input Anndata object (h5ad file)")
-parser.add_argument("-o", "--output", default='./', help="path to output directory, default='./'")
-parser.add_argument("-c", "--clusters", default='All', type=str, help="perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'")
+parser.add_argument('-i', '--input', required=True, help='path to input Anndata object (h5ad file)')
+parser.add_argument('-o', '--output', default='./', help='path to output directory, default='./'')
+parser.add_argument('-c', '--clusters', default='All', type=str, help='perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'')
 
 args = parser.parse_args()
 
 # check input
 if not os.path.exists(args.input):
-    sys.exit("The input path does not exist.")
+    sys.exit('The input path does not exist.')
 if args.input[-5:] != '.h5ad':
-    sys.exit("The input file is not a h5ad file.")
+    sys.exit('The input file is not a h5ad file.')
 
 # check output
 if not os.path.isdir(args.output):
-    sys.exit("The output directory does not exist.")
+    sys.exit('The output directory does not exist.')
 
 scriptpath = '/opt/CaDRReS-Sc'
 sys.path.append(os.path.abspath(scriptpath))
@@ -81,7 +81,8 @@ print('done!')
 
 ### Drug kill prediction
 ref_type = 'log2_median_ic50'
-drug_list = pred_ic50_df.columns
+masked_drugs = ['293','1062','193','255','119','166','147','1038','202','37','1133','136','35','86','34','170','1069','156','71','207','88','185','180','1053','1066','165','52','63','186','1023','172','17','1058','59','163','94','1042','127','89','106','1129','6','1067','199','64','1029','111','1072','192','1009','104','1039','1043','110','91']
+drug_list = [ x for x in pred_ic50_df.columns if x not in masked_drugs]
 drug_info_df = drug_info_df.loc[drug_list]
 
 ## Predict cell death percentage at the ref_type dosage
