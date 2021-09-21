@@ -82,11 +82,12 @@ print('done!')
 ### Drug kill prediction
 ref_type = 'log2_median_ic50'
 masked_drugs = ['293','1062','193','255','119','166','147','1038','202','37','1133','136','35','86','34','170','1069','156','71','207','88','185','180','1053','1066','165','52','63','186','1023','172','17','1058','59','163','94','1042','127','89','106','1129','6','1067','199','64','1029','111','1072','192','1009','104','1039','1043','110','91']
-drug_list = [ x for x in pred_ic50_df.columns if x not in masked_drugs]
+drug_list = [x for x in pred_ic50_df.columns if not x in masked_drugs]
 drug_info_df = drug_info_df.loc[drug_list]
+pred_ic50_df = pred_ic50_df.loc[:,drug_list]
 
 ## Predict cell death percentage at the ref_type dosage
-pred_delta_df = pd.DataFrame(pred_ic50_df.values - drug_info_df[ref_type].values, columns=drug_list)
+pred_delta_df = pd.DataFrame(pred_ic50_df.values - drug_info_df[ref_type].values, columns=pred_ic50_df.columns)
 pred_cv_df = 100 / (1 + (np.power(2, -pred_delta_df)))
 pred_kill_df = 100 - pred_cv_df
 
