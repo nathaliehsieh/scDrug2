@@ -19,6 +19,8 @@ RUN sed -i 's/loc\[commonRows, ].fillna(0\.0)/reindex(commonRows, axis="index", 
 ## CaDRReS-Sc
 RUN git clone https://github.com/CSB5/CaDRReS-Sc.git /opt/CaDRReS-Sc
 RUN wget https://www.dropbox.com/s/3v576mspw5yewbm/GDSC_exp.tsv -O /opt/CaDRReS-Sc/data/GDSC/GDSC_exp.tsv
+RUN mkdir -p /opt/CaDRReS-Sc/data/CCLE
+RUN wget https://ndownloader.figshare.com/files/29124747 -O /opt/CaDRReS-Sc/data/CCLE/CCLE_expression.csv
 
 RUN sed -i 's/import tensorflow as tf/import tensorflow.compat.v1 as tf\ntf.disable_v2_behavior()/g' /opt/CaDRReS-Sc/cadrres_sc/model.py
 RUN sed -i 's/import tensorflow\.python\.util\.deprecation as deprecation/from tensorflow.python.util import deprecation/g' /opt/CaDRReS-Sc/cadrres_sc/model.py
