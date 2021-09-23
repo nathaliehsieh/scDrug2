@@ -98,7 +98,7 @@ python3 single_cell_analysis.py --input INPUT --metadata METADATA --batch BATCH 
 - **Single-Cell Data Analysis** for sub-clustering on specified clusters at automatically determined resolution run under 4 cpus.
 
 ```
-python3 single_cell_analysis.py --input scanpyobj.h5ad --clusters CLUSTERS --auto-resolution --cpus 4
+python3 single_cell_analysis.py -f h5ad --input scanpyobj.h5ad --clusters CLUSTERS --auto-resolution --cpus 4
 ```
 
 
