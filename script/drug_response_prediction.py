@@ -39,6 +39,13 @@ class Drug_Response:
     def __init__(self):
         self.load_model()
         self.drug_info()
+        self.bulk_exp()
+        self.sc_exp()
+        self.kernel_feature_preparartion()
+        self.sensitivity_prediction()
+        if args.platform == 'GDSC':
+            self.cell_death_proportion()
+        self.output_result()
 
     def load_model(self):
         ### IC50/AUC prediction
