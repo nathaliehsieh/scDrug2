@@ -21,6 +21,9 @@ RUN git clone https://github.com/CSB5/CaDRReS-Sc.git /opt/CaDRReS-Sc
 RUN wget https://www.dropbox.com/s/3v576mspw5yewbm/GDSC_exp.tsv -O /opt/CaDRReS-Sc/data/GDSC/GDSC_exp.tsv
 RUN mkdir -p /opt/CaDRReS-Sc/data/CCLE
 RUN wget https://ndownloader.figshare.com/files/29124747 -O /opt/CaDRReS-Sc/data/CCLE/CCLE_expression.csv
+RUN mkdir -p /opt/CaDRReS-Sc/preprocessed_data/PRISM
+RUN wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1BdW-3oBp8q5hTTjB3iNysqSf8GNkKGH6' -O /opt/CaDRReS-Sc/preprocessed_data/PRISM/PRISM_drug_info.csv
+RUN wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1PGdLJonMBldTYihruXug-LgyoU7PQpAn' -O /opt/CaDRReS-Sc/preprocessed_data/PRISM/feature_genes.txt
 
 RUN sed -i 's/import tensorflow as tf/import tensorflow.compat.v1 as tf\ntf.disable_v2_behavior()/g' /opt/CaDRReS-Sc/cadrres_sc/model.py
 RUN sed -i 's/import tensorflow\.python\.util\.deprecation as deprecation/from tensorflow.python.util import deprecation/g' /opt/CaDRReS-Sc/cadrres_sc/model.py
