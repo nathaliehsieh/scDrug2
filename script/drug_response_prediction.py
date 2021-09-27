@@ -1,12 +1,13 @@
-import argparse, sys, os, pickle
-from collections import Counter
-import importlib
+import argparse, sys, os
 from ipywidgets import widgets
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
 import numpy as np
 import scanpy as sc
+
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 
 ## Parse command-line arguments
@@ -98,4 +99,24 @@ pred_ic50_df.round(3).to_csv(os.path.join(args.output, 'IC50_prediction.csv'))
 pred_kill_df.columns = pd.MultiIndex.from_frame(drug_df)
 pred_kill_df.round(3).to_csv(os.path.join(args.output, 'drug_kill_prediction.csv'))
 
+## Generate figures
 
+def draw_plot(df, name='', figsize=()):
+    #sns.set(rc={'figure.figsize':figsize})
+    fig, ax = plt.subplots(figsize=figsize) 
+    sns.heatmap(df.iloc[:,:-1], cmap='Blues', \
+            linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'shrink': .2, 'label': name}, ax=ax)
+    ax.set(xlabel='Cluster', ylabel='Drug')
+    for _, spine in ax.spines.items():
+        spine.set_visible(True)
+        spine.set_color('lightgrey') 
+    plt.savefig(os.path.join(args.output, '{}.png'.format(name)), bbox_inches='tight')
+    plt.close()
+
+tmp_pred_ic50_df = pred_ic50_df.iloc[1:,:].T
+tmp_pred_ic50_df = tmp_pred_ic50_df.assign(sum=tmp_pred_ic50_df.sum(axis=1)).sort_values(by='sum', ascending=True)
+draw_plot(tmp_pred_ic50_df, name='predicted IC50', figsize=(12,40))
+tmp_pred_kill_df = pred_kill_df.iloc[1:,:].T
+tmp_pred_kill_df = tmp_pred_kill_df.loc[(tmp_pred_kill_df>=50).all(axis=1)]
+tmp_pred_kill_df = tmp_pred_kill_df.assign(sum=tmp_pred_kill_df.sum(axis=1)).sort_values(by='sum', ascending=False)
+draw_plot(tmp_pred_kill_df, name='predicted cell death', figsize=(12,8))
