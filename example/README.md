@@ -78,11 +78,3 @@ mkdir write/treatment_selection
 python3 ../script/treatment_selection.py --input data/CIBERSORTx_Results.txt --output write/treatment_selection \
 --celltype HEPG2 --metadata data/GSE70138_Broad_LINCS_inst_info_2017-03-06.txt
 ```
-
-- To visualize the result treatment effect, we illustrate the consistency plots, and the heatmap of palbociclib, NVP-BEZ235, and selumetinib.
-
-```
-mkdir write/draw_effect
-
-python3 ../script/draw_effect.py --input write/treatment_selection --output write/draw_effect --drugs "palbociclib,NVP-BEZ235,selumetinib"
-```
