@@ -194,35 +194,9 @@ optional arguments:
   --metadata METADATA   the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'
 ```
 
-- Run `python draw_effect.py -h` to show the help messages as follow for treatment effect visualization.
-
-```
-usage: draw_effect.py [-h] -i INPUT [-o OUTPUT] [--threshold THRESHOLD] [--conthreshold CONTHRESHOLD] [--names NAMES]
-
-Generate drug effect plots and dataframe (.csv)
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        the directory where the files generated after running treatment_selection.py are stored, including 'df_effect.pickle', 
-                        'DICT_DRUG_PRE.pickle' and the solution table ('*_solution_list_t*_cont*.csv').
-  -o OUTPUT, --output OUTPUT
-                        path to output directory, default='./'
-  --threshold THRESHOLD
-                        threshold of cell survival rate used for treatment selection; If not provided, the value wll be set based on the name of the table file.
-  --conthreshold CONTHRESHOLD
-                        consistency threshold used for treatment selection; If not provided, the value wll be set based on the name of the table file.
-  --drugs DRUGS         comma-delimited names of drugs for heatmap visualization. Example: palbociclib,NVP-BEZ235,selumetinib
-```
-
 - **Select Treatment Combinations** with the L1000 metadata.
 
 ```
 python3 treatment_selection.py --input CIBERSORTx_Adjusted.txt --celltype CELLTYPE --metadata METADATA
 ```
 
-- Illustrate the consistency plots, the dataframe, and the heatmap of given drugs for the treatment effect.
-
-```
-python3 draw_effect.py --input INPUT --drugs DRUGS
-```
