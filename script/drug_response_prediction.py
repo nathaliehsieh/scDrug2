@@ -45,10 +45,10 @@ class Drug_Response:
         self.kernel_feature_preparartion()
         self.sensitivity_prediction()
         if args.platform == 'GDSC':
-            self.masked_drugs = list(pd.read_csv('../data/masked_drugs.csv')['GDSC'].dropna().astype('int64').astype('str'))
+            self.masked_drugs = list(pd.read_csv('/scDrug/data/masked_drugs.csv')['GDSC'].dropna().astype('int64').astype('str'))
             self.cell_death_proportion()
         else:
-            self.masked_drugs = list(pd.read_csv('masked_drugs.csv')['PRISM'])
+            self.masked_drugs = list(pd.read_csv('/scDrug/data/masked_drugs.csv')['PRISM'])
         self.output_result()
         self.figure_output()
 
@@ -148,8 +148,9 @@ class Drug_Response:
             drug_list  = [d for d in drug_list if d not in self.masked_drugs]
             drug_df = pd.DataFrame({'Drug ID':drug_list,
                                     'Drug Name':[self.drug_info_df.loc[d, 'name'] for d in drug_list]})
-            scaling = pd.Series([240]*1448, index=self.pred_auc_df.columns)
-            translation = pd.Series([-120]*1448, index=self.pred_auc_df.columns)
+            scaling = pd.Series([240]*1086, index=drug_list)
+            translation = pd.Series([-120]*1086, index=drug_list)
+            self.pred_auc_df = self.pred_auc_df.loc[:,drug_list]
             self.pred_auc_df = (self.pred_auc_df-translation)/scaling
             self.pred_auc_df.columns = pd.MultiIndex.from_frame(drug_df)
             self.pred_auc_df.round(3).to_csv(os.path.join(args.output, 'AUC_prediction.csv'))
