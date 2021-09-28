@@ -45,7 +45,10 @@ class Drug_Response:
         self.kernel_feature_preparartion()
         self.sensitivity_prediction()
         if args.platform == 'GDSC':
+            self.masked_drugs = list(pd.read_csv('../data/masked_drugs.csv')['GDSC'].dropna().astype('int64').astype('str'))
             self.cell_death_proportion()
+        else:
+            self.masked_drugs = list(pd.read_csv('masked_drugs.csv')['PRISM'])
         self.output_result()
         self.figure_output()
 
@@ -123,8 +126,7 @@ class Drug_Response:
     def cell_death_proportion(self):
         ### Drug kill prediction
         ref_type = 'log2_median_ic50'
-        masked_drugs = ['293','1062','193','255','119','166','147','1038','202','37','1133','136','35','86','34','170','1069','156','71','207','88','185','180','1053','1066','165','52','63','186','1023','172','17','1058','59','163','94','1042','127','89','106','1129','6','1067','199','64','1029','111','1072','192','1009','104','1039','1043','110','91']
-        self.drug_list = [x for x in self.pred_ic50_df.columns if not x in masked_drugs]
+        self.drug_list = [x for x in self.pred_ic50_df.columns if not x in self.masked_drugs]
         self.drug_info_df = self.drug_info_df.loc[self.drug_list]
         self.pred_ic50_df = self.pred_ic50_df.loc[:,self.drug_list]
 
@@ -143,6 +145,7 @@ class Drug_Response:
             self.pred_kill_df.round(3).to_csv(os.path.join(args.output, 'drug_kill_prediction.csv'))
         else:
             drug_list = list(self.pred_auc_df.columns)
+            drug_list  = [d for d in drug_list if d not in self.masked_drugs]
             drug_df = pd.DataFrame({'Drug ID':drug_list,
                                     'Drug Name':[self.drug_info_df.loc[d, 'name'] for d in drug_list]})
             scaling = pd.Series([240]*1448, index=self.pred_auc_df.columns)
@@ -175,6 +178,7 @@ class Drug_Response:
             plt.close()
 
     def figure_output(self):
+        print('Ploting...')
         ## GDSC figures
         if args.platform == 'GDSC':
             tmp_pred_ic50_df = self.pred_ic50_df.iloc[1:,:].T
@@ -189,7 +193,8 @@ class Drug_Response:
         else:
             tmp_pred_auc_df = self.pred_auc_df.iloc[1:,:].T
             tmp_pred_auc_df = tmp_pred_auc_df.assign(sum=tmp_pred_auc_df.sum(axis=1)).sort_values(by='sum', ascending=True)
-            self.draw_plot(tmp_pred_auc_df, name='predicted AUC', figsize=(12,60))   
+            self.draw_plot(tmp_pred_auc_df, name='predicted AUC', figsize=(12,60))  
+        print('done!') 
 
 
 job = Drug_Response()
