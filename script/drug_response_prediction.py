@@ -65,8 +65,7 @@ class Drug_Response:
         else:
             sys.exit('Wrong platform name.')
         self.cadrres_model = model.load_model(model_file)
-    
-<<<<<<< HEAD
+
     def drug_info(self):
         ## Read drug information
         if args.platform == 'GDSC':
@@ -200,56 +199,3 @@ class Drug_Response:
 
 
 job = Drug_Response()
-=======
-adata_exp_mean = pd.Series(adata.raw.X.mean(axis=0).tolist()[0], index=adata.raw.var.index)
-cluster_norm_exp_df = cluster_norm_exp_df.sub(adata_exp_mean, axis=0)
-
-## Calculate kernel feature
-test_kernel_df = pp.gexp.calculate_kernel_feature(cluster_norm_exp_df, cell_line_log2_mean_fc_exp_df, ess_gene_list)
-
-## Drug response prediction
-print('Predicting drug response for using CaDRReS: {}'.format(model_spec_name))
-pred_ic50_df, P_test_df= model.predict_from_model(cadrres_model, test_kernel_df, model_spec_name)
-print('done!')
-
-### Drug kill prediction
-ref_type = 'log2_median_ic50'
-masked_drugs = ['293','1062','193','255','119','166','147','1038','202','37','1133','136','35','86','34','170','1069','156','71','207','88','185','180','1053','1066','165','52','63','186','1023','172','17','1058','59','163','94','1042','127','89','106','1129','6','1067','199','64','1029','111','1072','192','1009','104','1039','1043','110','91']
-drug_list = [x for x in pred_ic50_df.columns if not x in masked_drugs]
-drug_info_df = drug_info_df.loc[drug_list]
-pred_ic50_df = pred_ic50_df.loc[:,drug_list]
-
-## Predict cell death percentage at the ref_type dosage
-pred_delta_df = pd.DataFrame(pred_ic50_df.values - drug_info_df[ref_type].values, columns=pred_ic50_df.columns)
-pred_cv_df = 100 / (1 + (np.power(2, -pred_delta_df)))
-pred_kill_df = 100 - pred_cv_df
-
-drug_df = pd.DataFrame({'Drug ID': drug_list, 
-                        'Drug Name': [drug_info_df.loc[drug_id]['Drug Name'] for drug_id in drug_list]})
-pred_ic50_df.columns = pd.MultiIndex.from_frame(drug_df)
-pred_ic50_df.round(3).to_csv(os.path.join(args.output, 'IC50_prediction.csv'))
-pred_kill_df.columns = pd.MultiIndex.from_frame(drug_df)
-pred_kill_df.round(3).to_csv(os.path.join(args.output, 'drug_kill_prediction.csv'))
-
-## Generate figures
-
-def draw_plot(df, name='', figsize=()):
-    #sns.set(rc={'figure.figsize':figsize})
-    fig, ax = plt.subplots(figsize=figsize) 
-    sns.heatmap(df.iloc[:,:-1], cmap='Blues', \
-            linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'shrink': .2, 'label': name}, ax=ax)
-    ax.set(xlabel='Cluster', ylabel='Drug')
-    for _, spine in ax.spines.items():
-        spine.set_visible(True)
-        spine.set_color('lightgrey') 
-    plt.savefig(os.path.join(args.output, '{}.png'.format(name)), bbox_inches='tight')
-    plt.close()
-
-tmp_pred_ic50_df = pred_ic50_df.iloc[1:,:].T
-tmp_pred_ic50_df = tmp_pred_ic50_df.assign(sum=tmp_pred_ic50_df.sum(axis=1)).sort_values(by='sum', ascending=True)
-draw_plot(tmp_pred_ic50_df, name='predicted IC50', figsize=(12,40))
-tmp_pred_kill_df = pred_kill_df.iloc[1:,:].T
-tmp_pred_kill_df = tmp_pred_kill_df.loc[(tmp_pred_kill_df>=50).all(axis=1)]
-tmp_pred_kill_df = tmp_pred_kill_df.assign(sum=tmp_pred_kill_df.sum(axis=1)).sort_values(by='sum', ascending=False)
-draw_plot(tmp_pred_kill_df, name='predicted cell death', figsize=(12,8))
->>>>>>> origin
