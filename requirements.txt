@@ -8,3 +8,4 @@ gseapy
 ipywidgets
 cmapPy
 multiprocess
+harmonypy
