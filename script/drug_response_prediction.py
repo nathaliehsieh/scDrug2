@@ -152,25 +152,44 @@ class Drug_Response:
             self.pred_auc_df.round(3).to_csv(os.path.join(args.output, 'AUC_prediction.csv'))
     
     def draw_plot(self, df, name='', figsize=()):
-        #sns.set(rc={'figure.figsize':figsize})
-        fig, ax = plt.subplots(figsize=figsize) 
-        sns.heatmap(df.iloc[:,:-1], cmap='Blues', \
-                linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'shrink': .2, 'label': name}, ax=ax)
-        ax.set(xlabel='Cluster', ylabel='Drug')
-        for _, spine in ax.spines.items():
-            spine.set_visible(True)
-            spine.set_color('lightgrey') 
-        plt.savefig(os.path.join(args.output, '{}.png'.format(name)), bbox_inches='tight')
-        plt.close()
+        if args.platform == 'GDSC':
+            fig, ax = plt.subplots(figsize=figsize) 
+            sns.heatmap(df.iloc[:,:-1], cmap='Blues', \
+                        linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'shrink': .2, 'label': name}, ax=ax)
+            ax.set(xlabel='Cluster', ylabel='Drug')
+            for _, spine in ax.spines.items():
+                spine.set_visible(True)
+                spine.set_color('lightgrey') 
+            plt.savefig(os.path.join(args.output, '{}.png'.format(name)), bbox_inches='tight', dpi=200)
+            plt.close()
+
+        else:
+            fig, ax = plt.subplots(figsize=figsize) 
+            sns.heatmap(df.iloc[:,:-1], cmap='Blues', \
+                        linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'shrink': .2, 'label': name}, ax=ax, vmin=0, vmax=1)
+            ax.set(xlabel='Cluster', ylabel='Drug')
+            for _, spine in ax.spines.items():
+                spine.set_visible(True)
+                spine.set_color('lightgrey') 
+            plt.savefig(os.path.join(args.output, '{}.png'.format(name)), bbox_inches='tight', dpi=200)
+            plt.close()
 
     def figure_output(self):
-        tmp_pred_ic50_df = self.pred_ic50_df.iloc[1:,:].T
-        tmp_pred_ic50_df = tmp_pred_ic50_df.assign(sum=tmp_pred_ic50_df.sum(axis=1)).sort_values(by='sum', ascending=True)
-        self.draw_plot(tmp_pred_ic50_df, name='predicted IC50', figsize=(12,40))
-        tmp_pred_kill_df = self.pred_kill_df.iloc[1:,:].T
-        tmp_pred_kill_df = tmp_pred_kill_df.loc[(tmp_pred_kill_df>=50).all(axis=1)]
-        tmp_pred_kill_df = tmp_pred_kill_df.assign(sum=tmp_pred_kill_df.sum(axis=1)).sort_values(by='sum', ascending=False)
-        self.draw_plot(tmp_pred_kill_df, name='predicted cell death', figsize=(12,8))   
+        ## GDSC figures
+        if args.platform == 'GDSC':
+            tmp_pred_ic50_df = self.pred_ic50_df.iloc[1:,:].T
+            tmp_pred_ic50_df = tmp_pred_ic50_df.assign(sum=tmp_pred_ic50_df.sum(axis=1)).sort_values(by='sum', ascending=True)
+            self.draw_plot(tmp_pred_ic50_df, name='predicted IC50', figsize=(12,40))
+            tmp_pred_kill_df = self.pred_kill_df.iloc[1:,:].T
+            tmp_pred_kill_df = tmp_pred_kill_df.loc[(tmp_pred_kill_df>=50).all(axis=1)]
+            tmp_pred_kill_df = tmp_pred_kill_df.assign(sum=tmp_pred_kill_df.sum(axis=1)).sort_values(by='sum', ascending=False)
+            self.draw_plot(tmp_pred_kill_df, name='predicted cell death', figsize=(12,8))
+
+        ## PRISM figures
+        else:
+            tmp_pred_auc_df = self.pred_auc_df.iloc[1:,:].T
+            tmp_pred_auc_df = tmp_pred_auc_df.assign(sum=tmp_pred_auc_df.sum(axis=1)).sort_values(by='sum', ascending=True)
+            self.draw_plot(tmp_pred_auc_df, name='predicted AUC', figsize=(12,60))   
 
 
 job = Drug_Response()
