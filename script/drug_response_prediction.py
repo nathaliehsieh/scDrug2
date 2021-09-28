@@ -56,7 +56,7 @@ class Drug_Response:
         if args.platform == 'GDSC':
             model_file = model_dir + '{}_param_dict_all_genes.pickle'.format(self.model_spec_name)
         elif args.platform == 'PRISM':
-            model_file = model_dir + '{}_param_dict_prism.pickle'.format(self.model_spec_name) ##
+            model_file = model_dir + '{}_param_dict_prism.pickle'.format(self.model_spec_name)
         else:
             sys.exit('Wrong platform name.')
         self.cadrres_model = model.load_model(model_file)
@@ -67,7 +67,7 @@ class Drug_Response:
             self.drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
             self.drug_info_df.index = self.drug_info_df.index.astype(str)
         else:
-            self.drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/PRISM/PRISM_drug_info.csv', index_col='broad_id') ##
+            self.drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/PRISM/PRISM_drug_info.csv', index_col='broad_id')
         
     def bulk_exp(self):
         ## Read test data
@@ -124,12 +124,12 @@ class Drug_Response:
         masked_drugs = ['293','1062','193','255','119','166','147','1038','202','37','1133','136','35','86','34','170','1069','156','71','207','88','185','180','1053','1066','165','52','63','186','1023','172','17','1058','59','163','94','1042','127','89','106','1129','6','1067','199','64','1029','111','1072','192','1009','104','1039','1043','110','91']
         self.drug_list = [x for x in self.pred_ic50_df.columns if not x in masked_drugs]
         self.drug_info_df = self.drug_info_df.loc[self.drug_list]
-        pred_ic50_df = self.pred_ic50_df.loc[:,self.drug_list]
+        self.pred_ic50_df = self.pred_ic50_df.loc[:,self.drug_list]
 
         ## Predict cell death percentage at the ref_type dosage
-        pred_delta_df = pd.DataFrame(pred_ic50_df.values - self.drug_info_df[ref_type].values, columns=pred_ic50_df.columns)
+        pred_delta_df = pd.DataFrame(self.pred_ic50_df.values - self.drug_info_df[ref_type].values, columns=self.pred_ic50_df.columns)
         pred_cv_df = 100 / (1 + (np.power(2, -pred_delta_df)))
-        pred_kill_df = 100 - pred_cv_df
+        self.pred_kill_df = 100 - pred_cv_df
     
     def output_result(self):
         if args.platform == 'GDSC':
@@ -147,3 +147,4 @@ class Drug_Response:
             self.pred_auc_df.round(3).to_csv(os.path.join(args.output, 'AUC_prediction.csv'))
 
 
+job = Drug_Response()
