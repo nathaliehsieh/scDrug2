@@ -7,12 +7,15 @@ import pickle
 import sys
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib import pyplot as plt
 
 pd.options.mode.chained_assignment = None
 
 global threshold
 global con_threshold
-global max_n_drug
+global pp
 
 class Drug:
     
@@ -23,15 +26,16 @@ class Drug:
         self.id = '{}_{:.3f}_{}'.format(self.name, self.dose, self.time)
         self.inst = inst
         self.effect = np.array(effect)
+        self.sum_effect = self.effect.sum()
 
     def __eq__(self, other):
-        return self.dose == other.dose and self.time == other.time
+        return self.sum_effect == other.sum_effect and self.dose == other.dose
 
     def __lt__(self, other):
-        return (self.dose > other.dose)
+        return (self.sum_effect > other.sum_effect)
 
     def __gt__(self, other):
-        return (self.dose < other.dose)
+        return (self.sum_effect < other.sum_effect)
 
     def __str__(self):
         return '{} {}uM {}h'.format(self.name, self.dose, self.time)
@@ -89,23 +93,23 @@ def update_df_effect(df, removed_clusters = []):
     df['kill_all_count'] = df.apply(lambda row: len([x for x in row if x <= threshold]), axis=1)
     return df
 
-def choose_least_dose(drug_ids):
+def choose_strongest(drug_ids):
     if len(drug_ids) <= 1 :
         return drug_ids
     else:
         drug_list = [DICT_DRUG[x] for x in drug_ids]
-        least_dose = max(drug_list).dose
-        return [x.id for x in drug_list if x.dose == least_dose]
+        least_survival = max(drug_list).sum_effect
+        return [x.id for x in drug_list if x.sum_effect == least_survival]
 
 def select_candidate_drugs(df, _max):
     if(_max <= 0): return []
     #print('\n1st step: kill same amount clusters ( %d clusters) : ' %  _max)
     same_ability_drugs = df[df['kill_all_count'].values == _max].index.to_list()
-    # choose the one with minimum dose
-    # min_dose_drugs = choose_least_dose(same_ability_drugs)
-
+    # choose the one with strongest killing ability
+    same_ability_drugs = choose_strongest(same_ability_drugs)
+    
+    #same_ability_drugs = sorted(same_ability_drugs, reverse=True, key=lambda d: (d.split('_',2)[0], float(d.split('_',2)[1])))
     # Only the one with min concentration will be kept in candidates among the drugs with same name
-    same_ability_drugs = sorted(same_ability_drugs, reverse=True, key=lambda d: (d.split('_',2)[0], float(d.split('_',2)[1])))
     dict_filtered_drugs = {}
     for d in same_ability_drugs:
         if not (name:=d.split('_',2)[0]) in dict_filtered_drugs.keys():
@@ -120,7 +124,7 @@ def find_drug(df, solution=[], LIST_SOLUTION=[]):
     else :
         candidates = select_candidate_drugs(df, df['kill_all_count'].values.max())
         # sort candidates by its concentration
-        candidates = sorted(candidates, reverse=False, key=lambda d: float(d.split('_',2)[1]))[:min(max_n_drug, len(candidates))]
+        #candidates = sorted(candidates, reverse=False, key=lambda d: float(d.split('_',2)[1]))[:len([x for x in candidates if float(x.split('_',2)[1]) == float(candidates[0].split('_',2)[1])])]
         for drug in candidates:
             solution.append(drug)
             killed_clusters = [x for x in df.columns if df.loc[drug,x] <= threshold]
@@ -140,7 +144,6 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--con_threshold", default=-0.75, type=float, help="Consistency threshold. Range: [-1,0), default=-0.75")
     parser.add_argument("--celltype", required=True, type=str, help="Same as the cell type for decomposition. Options: A375 | A549 | HEPG2 | HT29 | MCF7 | PC3 | YAPC")
     parser.add_argument("--metadata", default='./GSE70138_Broad_LINCS_inst_info_2017-03-06.txt', help="the L1000 instance info file, e.g., 'GSE70138_Broad_LINCS_inst_info_2017-03-06.txt'")
-    parser.add_argument("--max", default=5, type=int, help="Maximum number of compounds selected for 1 cluster, default=5. Outputing all the possible compounds may be time-consuming.")
 
     args = parser.parse_args()
     cell_types = ['A375','A549','HCC515','HEPG2','HT29','MCF7','PC3','YAPC']
@@ -158,15 +161,12 @@ if __name__ == '__main__':
         sys.exit("The provided cell type does not exist in the LINCS L1000 database.")
     if not os.path.isfile(args.metadata):
         sys.exit("The metadata file for LINCS L1000 does not exist.")
-    if args.max < 1:
-        sys.exit("Invalid input for MAX.")
 
 
     print('--------Preprocessing--------')
 
     threshold = args.threshold
     con_threshold = args.con_threshold
-    max_n_drug = args.max
     print('sensitivity threshold: {}, consistency threshold: {} '.format(threshold, con_threshold))
     
     # read metadata
@@ -251,20 +251,22 @@ if __name__ == '__main__':
         avg_drug = Drug(x.name, x.dose, x.time, inst_list, avg_effect)
         DICT_DRUG[avg_drug.id] = avg_drug
         df_effect = append_df_effect(df_effect, avg_drug.id, avg_effect.tolist())
-
     df_effect = add_consistency_info(df_effect, DICT_DRUG)
+    
 
 
     # store output
+    df_effect_bk = df_effect.iloc[:, :int(len(df_effect.columns)/2)]
+    df_effect_bk = df_effect_bk.reindex(sorted(df_effect_bk.columns, key=int), axis=1)
     outputname = args.input.rsplit('/',1)[1].rsplit('.')[0]
-    fh = open(file = '{}/{}_t{}_ct{}_df_effect.pickle'.format(args.outdir, outputname, threshold, con_threshold), mode='wb')
-    pickle.dump(df_effect, fh) 
-    fh.close()
-    fh = open(file = '{}/{}_t{}_ct{}_DICT_DRUG_PRE.pickle'.format(args.outdir, outputname, threshold, con_threshold), mode='wb')
-    pickle.dump(DICT_DRUG_PRE, fh)
-    fh = open(file = '{}/{}_t{}_ct{}_DICT_DRUG.pickle'.format(args.outdir, outputname, threshold, con_threshold), mode='wb')
-    pickle.dump(DICT_DRUG, fh)
-    fh.close()
+    # fh = open(file = '{}/{}_t{}_ct{}_df_effect.pickle'.format(args.outdir, outputname, threshold, con_threshold), mode='wb')
+    # pickle.dump(df_effect, fh) 
+    # fh.close()
+    # fh = open(file = '{}/{}_t{}_ct{}_DICT_DRUG_PRE.pickle'.format(args.outdir, outputname, threshold, con_threshold), mode='wb')
+    # pickle.dump(DICT_DRUG_PRE, fh)
+    # fh = open(file = '{}/{}_t{}_ct{}_DICT_DRUG.pickle'.format(args.outdir, outputname, threshold, con_threshold), mode='wb')
+    # pickle.dump(DICT_DRUG, fh)
+    # fh.close()
 
 
     print('\n--------Subpopulation Analysis--------')
@@ -299,12 +301,85 @@ if __name__ == '__main__':
     LIST_SOLUTION = sorted(LIST_SOLUTION)
     list_result = list(LIST_SOLUTION for LIST_SOLUTION,_ in itertools.groupby(LIST_SOLUTION))
 
-    with open('{}/{}_solution_list_t{}_cont{}.csv'.format(args.outdir, outputname, threshold, con_threshold),"w+") as f:
-        writer = csv.writer(f)
-        writer.writerows(list_result)
+    print('--------Generating Figures--------')
+    def draw_lincs_heatmap(df, drugs, name=""):
+        if len(drugs[0].split('_')) > 1 :
+            selected_index = drugs
+        else:
+            selected_index = [x for x in df.index if x.split('_',1)[0] in drugs]
+        if len(selected_index) < 1:
+            print('Selected drugs were not used in the treatment selection:')
+            print(*drugs)
+        else:
+            subdf = df.loc[selected_index,:]
+            subdf = subdf.assign(sum=subdf.sum(axis=1)).sort_values(by='sum', ascending=True).drop(columns='sum')
+            print(subdf)
+            for i in subdf.index:
+                for j in subdf.columns:
+                    if(subdf.loc[i,j] > 0): subdf.loc[i,j] = 0
+            sns.set(rc={'figure.figsize':(12, int(len(selected_index))/2)})
+            subdf.index = [x.rsplit('_',1)[0] for x in subdf.index]
+            total_row = pd.Series(subdf.min(),name='combined treatment')
+            subdf = subdf.append(total_row)
+            ax = sns.heatmap(subdf, center=0, cmap='RdBu', vmin=-1, vmax=0, \
+                    linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'label': 'cell survival rate'})
+            for _, spine in ax.spines.items():
+                spine.set_visible(True)
+                spine.set_color('lightgrey')
+            (lab:=ax.get_yticklabels()[-1]).set_weight('bold')
+            lab.set_color('red')
+            ax.set(xlabel='Cluster')
 
+            c_bar = ax.collections[0].colorbar
+            c_bar.set_ticks([threshold, -0.5, 0])
+            c_bar.set_ticklabels([str(threshold), str(-0.5), '\u2265 0'])
+            heatmapname = os.path.join(args.outdir, 'comb_heatmap_{}.png'.format(name))
+            plt.savefig(heatmapname, bbox_inches='tight')
+            print('Heatmap (combined treatment) is stored in \'{}\'.'.format(heatmapname))
+            plt.clf()
 
-    print('Done! Cocktail therapy is stored in {}/{}_solution_list_t{}_cont{}.csv'.format(args.outdir, outputname, threshold, con_threshold))
+    def draw_lincs_cons_plot(index_list, df_effect, df_all):
+        index_list = [x for x in index_list if x in df_effect.index]
+        index_list = index_list[::-1]
+        df = df_effect.loc[index_list,:]
+        df_all = df_all.append(df)
+        df = df.T
+        df.plot(kind='bar', ylim=(-1.0,1.0), rot=0, colormap='summer_r', width=0.7, figsize=(15,5), yticks=[-1.0,-0.5,0,0.5,1.0], xlabel='cluster', ylabel='survival rate')
+        plt.legend(labels=[x.split('_',2)[1]+' \u03BCM' for x in df.columns], loc='center left', bbox_to_anchor=(1.0, 0.5))
+        plt.title(index_list[0].split('_',1)[0], fontweight='bold')
+        plt.axhline(y=0, color='black', linestyle='-', lw=0.8)
+        plt.axhline(y=threshold, color='red', linestyle='dotted', lw=0.8)
+        plt.text((n_c:=len(df_effect.columns))-0.3, threshold+0.01, 'threshold={}'.format(threshold), fontsize=8, color='red')
+        plt.axhline(y=con_threshold, color='blue', linestyle='dotted', lw=0.8)
+        plt.text(n_c-0.3, con_threshold+0.01, 'con. threshold={}'.format(con_threshold), fontsize=8, color='blue')
+        pp.savefig(bbox_inches='tight')
+        plt.close()
+        return df_all
+
+    print(list_result)
+    keywords_long = [item for sublist in list_result for item in sublist]
+
+    keywords = list(set([x.split('_',1)[0] for x in keywords_long if isinstance(x, str) ]))
+    print('{} unique drugs.'.format(len(keywords)))
+
+    DICT_INDEX = {}
+
+    pdfname = os.path.join(args.outdir, 'treatment_effect.pdf')
+    pp = PdfPages(pdfname)
+    df_all = pd.DataFrame(columns = df_effect_bk.columns)
+    for drug_id in sorted(keywords):
+        DICT_INDEX[drug_id] = [x for x in DICT_DRUG_PRE.keys() if drug_id == x.split('_',1)[0]]
+        df_all = draw_lincs_cons_plot(DICT_INDEX[drug_id], df_effect_bk, df_all)
+    pp.close()
+
+    for i, comb in enumerate(list_result):
+        draw_lincs_heatmap(df_all, [x.strip() for x in comb], name=str(i))
+
+    csvname = os.path.join(args.outdir, 'treatment_effect.csv')
+    df_all.loc[keywords_long,:].to_csv(csvname, index=True)
+    print('Figures are stored in \'{}\'.'.format(pdfname))
+    print('Values are stored in \'{}\'.'.format(csvname))
+
 
 
 
