@@ -143,6 +143,9 @@ class Drug_Response:
             drug_list = list(self.pred_auc_df.columns)
             drug_df = pd.DataFrame({'Drug ID':drug_list,
                                     'Drug Name':[self.drug_info_df.loc[d, 'name'] for d in drug_list]})
+            scaling = pd.Series([240]*1448, index=self.pred_auc_df.columns)
+            translation = pd.Series([-120]*1448, index=self.pred_auc_df.columns)
+            self.pred_auc_df = (self.pred_auc_df-translation)/scaling
             self.pred_auc_df.columns = pd.MultiIndex.from_frame(drug_df)
             self.pred_auc_df.round(3).to_csv(os.path.join(args.output, 'AUC_prediction.csv'))
 
