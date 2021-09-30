@@ -182,17 +182,17 @@ class Drug_Response:
         print('Ploting...')
         ## GDSC figures
         if args.platform == 'GDSC':
-            tmp_pred_ic50_df = self.pred_ic50_df.iloc[1:,:].T
+            tmp_pred_ic50_df = self.pred_ic50_df.T
             tmp_pred_ic50_df = tmp_pred_ic50_df.assign(sum=tmp_pred_ic50_df.sum(axis=1)).sort_values(by='sum', ascending=True)
             self.draw_plot(tmp_pred_ic50_df, name='predicted IC50', figsize=(12,40))
-            tmp_pred_kill_df = self.pred_kill_df.iloc[1:,:].T
+            tmp_pred_kill_df = self.pred_kill_df.T
             tmp_pred_kill_df = tmp_pred_kill_df.loc[(tmp_pred_kill_df>=50).all(axis=1)]
             tmp_pred_kill_df = tmp_pred_kill_df.assign(sum=tmp_pred_kill_df.sum(axis=1)).sort_values(by='sum', ascending=False)
             self.draw_plot(tmp_pred_kill_df, name='predicted cell death', figsize=(12,8))
 
         ## PRISM figures
         else:
-            tmp_pred_auc_df = self.pred_auc_df.iloc[1:,:].T
+            tmp_pred_auc_df = self.pred_auc_df.T
             tmp_pred_auc_df = tmp_pred_auc_df.assign(sum=tmp_pred_auc_df.sum(axis=1)).sort_values(by='sum', ascending=True)
             self.draw_plot(tmp_pred_auc_df, name='predicted AUC', figsize=(12,60))  
         print('done!') 
