@@ -104,7 +104,7 @@ python3 single_cell_analysis.py -f h5ad --input scanpyobj.h5ad --clusters CLUSTE
 
 ### Drug Response Prediction
 
-**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported clusterwise IC50 and cell death percentages to drugs in the GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), and output the prediction results `IC50_prediction.csv` and `drug_kill_prediction.csv`.
+**Drug Response Prediction** examined  `scanpyobj.h5ad` generated in **Single-Cell Data Analysis**, reported clusterwise IC50 and cell death percentages to drugs in the GDSC database via [CaDRReS-Sc](https://github.com/CSB5/CaDRReS-SC) (a recommender system framework for *in silico* drug response prediction), or drug sensitivity AUC in the PRISM database from [DepMap Portal PRISM-19Q4] (https://doi.org/10.1038/s43018-019-0018-6). The output the prediction results are `IC50_prediction.csv` and `drug_kill_prediction.csv` while using parameter `--model GDSC`, and `AUC_prediction.csv` whlie using parameter `--model PRISM`.
 
 - Run `python3 drug_response_prediction.py -h` to show the help messages as follow for **Drug Response Prediction**.
 
@@ -121,9 +121,11 @@ optional arguments:
                         path to output directory, default='./'
   -c CLUSTERS, --clusters CLUSTERS
                         perform IC50 prediction on specified clusters, e.g. '1,3,8,9', default='All'
+  -m MODEL, --model MODEL_NAME
+                        the sensitivity screening is from GDSC ic50/PRISM auc, e.g. GDSC, PRISM, default='GDSC'
 ```
 
-- Predict IC50 and drug kill response on specified clusters (here for default all clusters) with **Drug Response Prediction**.
+- Predict drug response on specified clusters (here for default all clusters) with **Drug Response Prediction**.
 
 ```
 python3 drug_response_prediction.py --input scanpyobj.h5ad
