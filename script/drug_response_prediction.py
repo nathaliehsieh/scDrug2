@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Drug response prediction')
 parser.add_argument('-i', '--input', required=True, help='path to input Anndata object (h5ad file)')
 parser.add_argument('-o', '--output', default='./', help='path to output directory, default=\'./\'')
 parser.add_argument('-c', '--clusters', default='All', type=str, help='perform IC50 prediction on specified clusters, e.g. \'1,3,8,9\', default=\'All\'')
-parser.add_argument('-p', '--platform', default='GDSC', type=str, help='the sensitivity screening is from GDSC ic50/PRISM auc, e.g. GDSC, PRISM')
+parser.add_argument('-m', '--model', default='GDSC', type=str, help='the sensitivity screening is from GDSC ic50/PRISM auc, e.g. GDSC, PRISM')
 
 args = parser.parse_args()
 
@@ -44,7 +44,7 @@ class Drug_Response:
         self.sc_exp()
         self.kernel_feature_preparartion()
         self.sensitivity_prediction()
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             self.masked_drugs = list(pd.read_csv('/scDrug/data/masked_drugs.csv')['GDSC'].dropna().astype('int64').astype('str'))
             self.cell_death_proportion()
         else:
@@ -58,17 +58,17 @@ class Drug_Response:
         model_dir = '/scDrug/CaDRReS-Sc-model/'
         obj_function = widgets.Dropdown(options=['cadrres-wo-sample-bias', 'cadrres-wo-sample-bias-weight'], description='Objetice function')
         self.model_spec_name = obj_function.value
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             model_file = model_dir + '{}_param_dict_all_genes.pickle'.format(self.model_spec_name)
-        elif args.platform == 'PRISM':
+        elif args.model == 'PRISM':
             model_file = model_dir + '{}_param_dict_prism.pickle'.format(self.model_spec_name)
         else:
-            sys.exit('Wrong platform name.')
+            sys.exit('Wrong model name.')
         self.cadrres_model = model.load_model(model_file)
 
     def drug_info(self):
         ## Read drug information
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             self.drug_info_df = pd.read_csv(scriptpath + '/preprocessed_data/GDSC/drug_stat.csv', index_col=0)
             self.drug_info_df.index = self.drug_info_df.index.astype(str)
         else:
@@ -76,7 +76,7 @@ class Drug_Response:
         
     def bulk_exp(self):
         ## Read test data
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             self.gene_exp_df = pd.read_csv(scriptpath + '/data/GDSC/GDSC_exp.tsv', sep='\t', index_col=0)
             self.gene_exp_df = self.gene_exp_df.groupby(self.gene_exp_df.index).mean()
         else:
@@ -98,7 +98,7 @@ class Drug_Response:
 
     def kernel_feature_preparartion(self):
         ## Read essential genes list
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             ess_gene_list = self.gene_exp_df.index.dropna().tolist()
         else:
             ess_gene_list = utility.get_gene_list(scriptpath + '/preprocessed_data/PRISM/feature_genes.txt')
@@ -114,7 +114,7 @@ class Drug_Response:
     
     def sensitivity_prediction(self):
         ## Drug response prediction
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             print('Predicting drug response for using CaDRReS(GDSC): {}'.format(self.model_spec_name))
             self.pred_ic50_df, P_test_df= model.predict_from_model(self.cadrres_model, self.test_kernel_df, self.model_spec_name)
             print('done!')
@@ -136,7 +136,7 @@ class Drug_Response:
         self.pred_kill_df = 100 - pred_cv_df
     
     def output_result(self):
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             drug_df = pd.DataFrame({'Drug ID': self.drug_list, 
                                     'Drug Name': [self.drug_info_df.loc[drug_id]['Drug Name'] for drug_id in self.drug_list]})
             self.pred_ic50_df.columns = pd.MultiIndex.from_frame(drug_df)
@@ -156,7 +156,7 @@ class Drug_Response:
             self.pred_auc_df.round(3).to_csv(os.path.join(args.output, 'AUC_prediction.csv'))
     
     def draw_plot(self, df, name='', figsize=()):
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             fig, ax = plt.subplots(figsize=figsize) 
             sns.heatmap(df.iloc[:,:-1], cmap='Blues', \
                         linewidths=0.5, linecolor='lightgrey', cbar=True, cbar_kws={'shrink': .2, 'label': name}, ax=ax)
@@ -181,7 +181,7 @@ class Drug_Response:
     def figure_output(self):
         print('Ploting...')
         ## GDSC figures
-        if args.platform == 'GDSC':
+        if args.model == 'GDSC':
             tmp_pred_ic50_df = self.pred_ic50_df.T
             tmp_pred_ic50_df = tmp_pred_ic50_df.assign(sum=tmp_pred_ic50_df.sum(axis=1)).sort_values(by='sum', ascending=True)
             self.draw_plot(tmp_pred_ic50_df, name='predicted IC50', figsize=(12,40))
